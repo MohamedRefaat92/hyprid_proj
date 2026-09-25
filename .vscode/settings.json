@@ -7,15 +7,12 @@
 
   "r.rpath.mac":     "${workspaceFolder}/env/bin/R",
   "r.rpath.linux":   "${workspaceFolder}/env/bin/R",
-  "r.rpath.windows": "${workspaceFolder}\\env\\Scripts\\R.exe",
   "r.rterm.mac":     "${workspaceFolder}/env/bin/R",
   "r.rterm.linux":   "${workspaceFolder}/env/bin/R",
-  "r.rterm.windows": "${workspaceFolder}\\env\\Scripts\\R.exe",
-  "r.rterm.option": ["--no-save", "--no-restore"],
+   "r.rterm.option": ["--no-save", "--no-restore"],
   "r.sessionWatcher": true,
   "r.lsp.enabled": true,
 
   "terminal.integrated.env.osx":     { "PATH": "${workspaceFolder}/env/bin:${env:PATH}" },
-  "terminal.integrated.env.linux":   { "PATH": "${workspaceFolder}/env/bin:${env:PATH}" },
-  "terminal.integrated.env.windows": { "PATH": "${workspaceFolder}\\env\\Scripts;${workspaceFolder}\\env\\Library\\bin;${env:PATH}" }
+  "terminal.integrated.env.linux":   { "PATH": "${workspaceFolder}/env/bin:${env:PATH}" }
 }

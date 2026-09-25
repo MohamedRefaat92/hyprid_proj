@@ -7,6 +7,8 @@
 # Needs: Miniforge (mamba + conda) and uv on PATH. macOS/Linux; on Windows use WSL.
 set -euo pipefail
 cd "$(dirname "$0")"
+# Kernel names allow only letters, digits, '.', '_' and '-'
+name=$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
 
 # Keep mamba's package cache in ~/miniforge3, not in the project
 unset MAMBA_ROOT_PREFIX MAMBA_EXE
@@ -35,14 +37,15 @@ fi
 
 echo "==> [2/5] JupyterLab config: project kernels only, R language server from ./env"
 # jupyterlab-lsp would otherwise run whichever Rscript comes first on PATH
-env/bin/python - <<'EOF'
-import json, pathlib
+PROJECT_NAME="$name" env/bin/python - <<'EOF'
+import json, os, pathlib
+name = os.environ["PROJECT_NAME"]
 root = pathlib.Path.cwd()
 config = {
-    "KernelSpecManager": {"allowed_kernelspecs": ["hyprid-r", "hyprid-py"]},
+    "KernelSpecManager": {"allowed_kernelspecs": [f"{name}-r", f"{name}-py"]},
     "LanguageServerManager": {"language_servers": {"r-languageserver": {
         "argv": [str(root / "env/bin/Rscript"), "--slave", "-e", "languageserver::run()"],
-        "display_name": "languageserver (hyprid)",
+        "display_name": f"languageserver ({name})",
         "languages": ["r"],
         "mime_types": ["text/x-rsrc"],
         "version": 2,
@@ -61,9 +64,11 @@ echo "==> [4/5] R packages (renv)"
 env/bin/Rscript -e 'renv::restore(prompt = FALSE)'
 
 echo "==> [5/5] Jupyter kernels"
-env/bin/Rscript scripts/register-r-kernel.R
+rm -rf env/share/jupyter/kernels/*   # packages (e.g. ipykernel) ship their own kernelspecs; keep only ours
+
+env/bin/Rscript scripts/register-r-kernel.R "$name"
 # ipykernel warns that ./env "may not be found": that's the .venv's view; env/bin/jupyter finds it
 uv run --locked python -m ipykernel install --prefix ./env \
-  --name hyprid-py --display-name "Python (hyprid · uv)"
+  --name "$name-py" --display-name "Python ($name · uv)"
 
 echo "Done. Start JupyterLab with: env/bin/jupyter lab"

@@ -1,15 +1,17 @@
-# Writes the project's R kernelspec into env/share/jupyter/kernels/hyprid-r.
-# Run from the project root with the env's R: env/bin/Rscript scripts/register-r-kernel.R
+# Writes the project's R kernelspec into env/share/jupyter/kernels/<name>-r.
+# Run from the project root with the env's R: env/bin/Rscript scripts/register-r-kernel.R <name>
+name <- commandArgs(trailingOnly = TRUE)[1]
+if (is.na(name)) stop("usage: Rscript scripts/register-r-kernel.R <project-name>")
 root   <- normalizePath(".", winslash = "/")
 prefix <- normalizePath(file.path(R.home(), "..", ".."), winslash = "/")  # conda env root
 r_bin  <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "R.exe" else "R")
 
-kdir <- file.path(prefix, "share", "jupyter", "kernels", "hyprid-r")
+kdir <- file.path(prefix, "share", "jupyter", "kernels", paste0(name, "-r"))
 dir.create(kdir, recursive = TRUE, showWarnings = FALSE)
 
 spec <- list(
   argv = c(r_bin, "--slave", "-e", "IRkernel::main()", "--args", "{connection_file}"),
-  display_name = "R (hyprid · renv)",
+  display_name = sprintf("R (%s · renv)", name),
   language = "R",
   env = list(
     RENV_PROJECT   = root,

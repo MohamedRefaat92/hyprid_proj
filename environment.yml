@@ -8,28 +8,19 @@ dependencies:
   # build toolchain for renv source installs
   - compilers
   - make
-  - cmake
   - pkg-config
   # C libraries commonly needed by R packages
   - libcurl
   - openssl
   - libxml2
   - zlib
+  - icu
   - zeromq          # IRkernel -> pbdZMQ
-  - freetype
-  - fontconfig
-  - harfbuzz
-  - fribidi
-  - libpng
-  - libjpeg-turbo
-  - libtiff
-  - libwebp
   - gettext
   - pandoc          # rmarkdown
   # Jupyter front end (kernels come from uv and renv)
   - jupyterlab
   - jupyterlab-lsp
-  - lckr_jupyterlab_variableinspector
   # CLI tools
   - samtools
   - bedtools
