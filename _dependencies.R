@@ -1,8 +1,11 @@
-# ==============================================================================
-# PROJECT MANIFEST: Explicitly track background development tools
-# ==============================================================================
-
-library(vscDebugger)
+# Dev and infra packages renv should track (never sourced)
+library(IRkernel)
 library(languageserver)
+library(vscDebugger)
 library(jsonlite)
 library(rlang)
+library(R6)
+library(ggplot2)
+library(yaml)
+library(rmarkdown)
+library(knitr)

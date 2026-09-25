@@ -1,21 +1,35 @@
-# environment.yml
-name: "null"
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - nodefaults
 dependencies:
-  - r-base=4.3
-  - r-renv
-  - r-irkernel
+  # R runtime only. renv owns every R package.
+  - r-base=4.5
+  # build toolchain for renv source installs
+  - compilers
+  - make
+  - cmake
+  - pkg-config
+  # C libraries commonly needed by R packages
+  - libcurl
+  - openssl
+  - libxml2
+  - zlib
+  - zeromq          # IRkernel -> pbdZMQ
+  - freetype
+  - fontconfig
+  - harfbuzz
+  - fribidi
+  - libpng
+  - libjpeg-turbo
+  - libtiff
+  - libwebp
+  - gettext
+  - pandoc          # rmarkdown
+  # Jupyter front end (kernels come from uv and renv)
   - jupyterlab
   - jupyterlab-lsp
-  - r-yaml
-  - r-r6
-  - r-rmarkdown
-  - r-knitr
-  - r-jsonlite
-  - r-rlang
-  - r-ggplot2
+  - lckr_jupyterlab_variableinspector
+  # CLI tools
   - samtools
   - bedtools
