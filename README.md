@@ -24,13 +24,13 @@ This script is safe to re-run. It:
 2. restricts JupyterLab to the two project kernels
 3. runs `uv sync`
 4. runs `renv::restore()`, which compiles R packages from source (the first run takes a while)
-5. registers the `R (hyprid · renv)` and `Python (hyprid · uv)` kernels inside `./env`
+5. registers the `R (<folder> · renv)` and `Python (<folder> ·  uv)` kernels inside `./env`
 
 Kernel files and Jupyter config live in `./env`, which isn't committed. They contain absolute paths, so every machine generates its own through `bootstrap.sh`.
 
 ## Daily use
 
-- **JupyterLab:** `env/bin/jupyter lab`, then pick `R (hyprid · renv)` or `Python (hyprid · uv)`. Both work from notebooks in any subfolder.
+- **JupyterLab:** `env/bin/jupyter lab`, then pick `R (<folder> · renv)` or `Python (<folder> ·  uv)`. Both work from notebooks in any subfolder.
 - **VS Code notebooks:** pick the same two kernels from **Select Kernel → Jupyter Kernel…**.
 - **R in VS Code:** use **R: Create R Terminal**, or type `R` in an integrated terminal (`env/bin` is on the terminal PATH). Both attach to the R extension's workspace pane. With several R sessions open, run **R: Attach Active Terminal** to switch the pane to another session.
 - **Python scripts:** `uv run python script.py`.
