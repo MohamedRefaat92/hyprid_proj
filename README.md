@@ -53,6 +53,7 @@ Use `conda list`, not `mamba list`, to write the lockfile: mamba omits the `@EXP
 - **`command not found: arm64-apple-darwin20.0.0-clang`**: R was started without the project `.Rprofile`, which puts `env/bin` on PATH. Start R from the project root.
 - **"lockfile was generated with R x.y"** after an R upgrade: run `renv::snapshot()` once the packages are reinstalled. Don't run `renv::restore()` with a lockfile from a different R version.
 - **A `.micromamba/` folder appears:** the `vscode-micromamba` VS Code extension sets `MAMBA_ROOT_PREFIX` to the project. Disable or uninstall it; the folder is ignored by git.
+- **`[hyprid] … is not this project's R; renv not activated`**: some other R (for example `/usr/local/bin/R`) was started in the project. `.Rprofile` keeps it out, because it would create a second, incompatible renv library. Use `env/bin/R`.
 - **`.Rprofile` must end with a newline.** R silently skips an unterminated last line.
 
 ## Files

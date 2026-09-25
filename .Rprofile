@@ -1,3 +1,16 @@
+# This profile is only for the project's own R in ./env. Any other R (e.g. a
+# system R found first on PATH) would create a second, incompatible renv
+# library, so it gets a warning on stderr and a plain session instead.
+if (local({
+  root <- Sys.getenv("RENV_PROJECT", unset = getwd())
+  ok <- identical(
+    normalizePath(file.path(R.home(), "..", ".."), mustWork = FALSE),
+    normalizePath(file.path(root, "env"), mustWork = FALSE)
+  )
+  if (!ok) message("[hyprid] ", R.home(), " is not this project's R; renv not activated. Use env/bin/R.")
+  ok
+})) {
+
 # Put the conda env's tools (compilers, pkg-config, pandoc) on PATH even when
 # R is started directly as env/bin/R, without `mamba activate`.
 local({
@@ -33,4 +46,6 @@ if (interactive() && Sys.getenv("TERM_PROGRAM") == "vscode" &&
                     ".vscode-R", "init.R")
   if (file.exists(init)) source(init)
   rm(init)
+}
+
 }

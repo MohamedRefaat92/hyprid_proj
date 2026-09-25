@@ -33,10 +33,26 @@ else
   echo "    Solved fresh. Record it with: conda list -p ./env --explicit --md5 > $lock"
 fi
 
-echo "==> [2/5] JupyterLab shows only the project kernels"
-mkdir -p env/etc/jupyter
-echo '{"KernelSpecManager": {"allowed_kernelspecs": ["hyprid-r", "hyprid-py"]}}' \
-  > env/etc/jupyter/jupyter_server_config.json
+echo "==> [2/5] JupyterLab config: project kernels only, R language server from ./env"
+# jupyterlab-lsp would otherwise run whichever Rscript comes first on PATH
+env/bin/python - <<'EOF'
+import json, pathlib
+root = pathlib.Path.cwd()
+config = {
+    "KernelSpecManager": {"allowed_kernelspecs": ["hyprid-r", "hyprid-py"]},
+    "LanguageServerManager": {"language_servers": {"r-languageserver": {
+        "argv": [str(root / "env/bin/Rscript"), "--slave", "-e", "languageserver::run()"],
+        "display_name": "languageserver (hyprid)",
+        "languages": ["r"],
+        "mime_types": ["text/x-rsrc"],
+        "version": 2,
+        "env": {"RENV_PROJECT": str(root), "R_PROFILE_USER": str(root / ".Rprofile")},
+    }}},
+}
+path = root / "env/etc/jupyter/jupyter_server_config.json"
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(config, indent=2) + "\n")
+EOF
 
 echo "==> [3/5] Python packages (uv)"
 uv sync --locked
