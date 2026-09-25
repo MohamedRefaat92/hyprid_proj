@@ -1,0 +1,1 @@
+PATH="${R_HOME}/bin:${PATH}"

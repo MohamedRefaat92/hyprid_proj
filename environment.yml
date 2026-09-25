@@ -1,0 +1,21 @@
+# environment.yml
+name: "null"
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults
+dependencies:
+  - r-base=4.3
+  - r-renv
+  - r-irkernel
+  - jupyterlab
+  - jupyterlab-lsp
+  - r-yaml
+  - r-r6
+  - r-rmarkdown
+  - r-knitr
+  - r-jsonlite
+  - r-rlang
+  - r-ggplot2
+  - samtools
+  - bedtools
