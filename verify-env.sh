@@ -17,8 +17,7 @@ warn()    { printf '  ! %s\n    → %s\n' "$1" "$2"; n_warn=$((n_warn + 1)); }
 fail()    { printf '  ✖ %s\n    → %s\n' "$1" "$2"; n_fail=$((n_fail + 1)); }
 
 # checks go here, one section per step
-fail "test" "ignore" 
-fail "test" "ignore" 
+
 printf '\n%d passed, %d warnings, %d failed\n' "$n_pass" "$n_warn" "$n_fail"
 [[ $n_fail -eq 0 ]]                    # exit code 1 if anything failed
 
