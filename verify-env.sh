@@ -95,6 +95,37 @@ else
   fi
 fi
 
+section "2. Runtime rules"
+
+if $have_env; then
+  meta=$(ls env/conda-meta)
+  conda_r=$(grep '^r-' <<<"$meta" | grep -v '^r-base-[0-9]')
+  if [[ -z $conda_r ]]; then
+    rbase_ver=$(sed -nE 's/^r-base-([0-9][^-]*)-.*/\1/p' <<<"$meta")
+    pass "only r-base $rbase_ver from conda; R packages come from renv"
+  else
+    names=$(sed -E 's/-[0-9].*$//' <<<"$conda_r" | paste -sd' ' -)
+    fail "R packages installed by conda: $names" \
+         "mamba remove -p ./env $names; drop them from environment.yml; renv::install() them instead"
+  fi
+else
+  info "skipped: needs ./env"
+fi
+
+if [[ -z ${MAMBA_ROOT_PREFIX:-} ]]; then
+  pass "MAMBA_ROOT_PREFIX unset: mamba uses its default cache (~/miniforge3/pkgs)"
+elif [[ $MAMBA_ROOT_PREFIX == "$root"* ]]; then
+  fail "MAMBA_ROOT_PREFIX points into the project: $MAMBA_ROOT_PREFIX" \
+       "quit VS Code fully (⌘Q), reopen, check: echo \$MAMBA_ROOT_PREFIX"
+else
+  info "MAMBA_ROOT_PREFIX set outside the project: $MAMBA_ROOT_PREFIX"
+fi
+
+if [[ -d .micromamba ]]; then
+  warn ".micromamba/ exists in the project ($(du -sh .micromamba | cut -f1))" \
+       "rm -rf .micromamba once MAMBA_ROOT_PREFIX no longer points here"
+fi
+
 printf '\n%d passed, %d warnings, %d failed\n' "$n_pass" "$n_warn" "$n_fail"
 [[ $n_fail -eq 0 ]]                    # exit code 1 if anything failed
 
