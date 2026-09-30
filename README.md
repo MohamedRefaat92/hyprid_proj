@@ -32,7 +32,7 @@ Kernel files and Jupyter config live in `./env`, which isn't committed. They con
 
 - **JupyterLab:** `env/bin/jupyter lab`, then pick `R (<folder> · renv)` or `Python (<folder> ·  uv)`. Both work from notebooks in any subfolder.
 - **VS Code notebooks:** pick the same two kernels from **Select Kernel → Jupyter Kernel…**.
-- **R in VS Code:** use **R: Create R Terminal**, or type `R` in an integrated terminal (`env/bin` is on the terminal PATH). Both attach to the R extension's workspace pane. With several R sessions open, run **R: Attach Active Terminal** to switch the pane to another session.
+- **R in VS Code:** start R with **R: Create R Terminal** (or click **R not attached** in the status bar, or press Ctrl+Enter in an `.R` file). It runs `env/bin/R` and connects to the workspace pane and plot viewer through the `sess` package, which the R extension offers to install the first time. Typing `env/bin/R` in a plain terminal works too, but that session doesn't connect to the pane.
 - **Python scripts:** `uv run python script.py`.
 
 Neither VS Code panel shows the variables of **R notebook** kernels: the Jupyter Variables panel supports Python only. Use an R terminal with `.R`/`.qmd` files when you want the workspace pane, or run `ls.str()` in the notebook.
@@ -53,11 +53,11 @@ Use `conda list`, not `mamba list`, to write the lockfile: mamba omits the `@EXP
 - **`command not found: arm64-apple-darwin20.0.0-clang`**: R was started without the project `.Rprofile`, which puts `env/bin` on PATH. Start R from the project root.
 - **"lockfile was generated with R x.y"** after an R upgrade: run `renv::snapshot()` once the packages are reinstalled. Don't run `renv::restore()` with a lockfile from a different R version.
 - **A `.micromamba/` folder appears:** the `vscode-micromamba` VS Code extension sets `MAMBA_ROOT_PREFIX` to the project. Disable or uninstall it; the folder is ignored by git.
-- **`[hyprid] … is not this project's R; renv not activated`**: some other R (for example `/usr/local/bin/R`) was started in the project. `.Rprofile` keeps it out, because it would create a second, incompatible renv library. Use `env/bin/R`.
+- **`[<folder>] … is not this project's R; renv not activated`**: some other R (for example `/usr/local/bin/R`) was started in the project. `.Rprofile` keeps it out, because it would create a second, incompatible renv library. Use `env/bin/R`.
 - **`.Rprofile` must end with a newline.** R silently skips an unterminated last line.
 
 ## Files
 
-- `.Rprofile`: puts `env/bin` on PATH, sets repos and source-only installs, activates renv, attaches VS Code R sessions
+- `.Rprofile`: puts `env/bin` on PATH, sets repos and source-only installs, activates renv.
 - `scripts/register-r-kernel.R`: writes the R kernelspec (called by `bootstrap.sh`)
 - `.vscode/settings.json`: points VS Code at `./env` R and `.venv` Python, using `${workspaceFolder}` paths
