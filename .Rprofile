@@ -7,7 +7,7 @@ if (local({
     normalizePath(file.path(R.home(), "..", ".."), mustWork = FALSE),
     normalizePath(file.path(root, "env"), mustWork = FALSE)
   )
-  if (!ok) message("[hyprid] ", R.home(), " is not this project's R; renv not activated. Use env/bin/R.")
+  if (!ok) message("[", basename(root), "] ", R.home(), " is not this project's R; renv not activated. Use env/bin/R.")
   ok
 })) {
 
@@ -38,14 +38,15 @@ local({
   source(file.path(root, "renv", "activate.R"))
 })
 
-# Attach self-started R sessions in VS Code terminals to the R extension's
-# workspace pane. Terminals made with "R: Create R Terminal" already attach.
-if (interactive() && Sys.getenv("TERM_PROGRAM") == "vscode" &&
-    !nzchar(Sys.getenv("VSCODE_INIT_R"))) {
-  init <- file.path(Sys.getenv(if (.Platform$OS.type == "windows") "USERPROFILE" else "HOME"),
-                    ".vscode-R", "init.R")
-  if (file.exists(init)) source(init)
-  rm(init)
-}
+# Keep command history across sessions in .Rhistory (git-ignored). Saved after every
+# command, so it survives closing the terminal; R's own save-at-exit is off (--no-save in ./.vscode/settings.json).
+
+if (interactive()) local({
+  hist <- file.path(Sys.getenv("RENV_PROJECT", unset = getwd()), ".Rhistory")
+  invisible(addTaskCallback(function(...) {
+    try(utils::savehistory(hist), silent = TRUE)
+    TRUE                                   # TRUE = keep this callback for later commands
+  }, name = "save-history"))
+})
 
 }

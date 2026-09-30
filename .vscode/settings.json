@@ -9,7 +9,7 @@
   "r.rpath.linux":   "${workspaceFolder}/env/bin/R",
   "r.rterm.mac":     "${workspaceFolder}/env/bin/R",
   "r.rterm.linux":   "${workspaceFolder}/env/bin/R",
-   "r.rterm.option": ["--no-save", "--no-restore"],
+   "r.rterm.option": ["--no-save", "--no-restore-data"],
   "r.sessionWatcher": true,
   "r.lsp.enabled": true,
 
