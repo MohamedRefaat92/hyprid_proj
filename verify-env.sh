@@ -126,6 +126,29 @@ if [[ -d .micromamba ]]; then
        "rm -rf .micromamba once MAMBA_ROOT_PREFIX no longer points here"
 fi
 
+section "3. R (./env)"
+if $have_env; then
+  r_facts=$(env/bin/Rscript -e '
+    cat("version=", format(getRversion()), "\n", sep = "")
+    cat("home=", R.home(), "\n", sep = "")
+    cat("lib=", .libPaths()[1], "\n", sep = "")
+    cat("renv_project=", Sys.getenv("RENV_PROJECT"), "\n", sep = "")
+    cc_name <- system2(file.path(R.home("bin"), "R"), c("CMD", "config", "CC"), stdout = TRUE)
+    cat("cc=", Sys.which(strsplit(cc_name, " ")[[1]][1]), "\n", sep = "")
+  ' 2>/dev/null)
+
+  if [[ -z $r_facts ]]; then
+    fail "env/bin/Rscript produced no output" "run it by hand to see the error: env/bin/Rscript -e 1"
+  else
+    while IFS='=' read -r key value; do
+      printf -v "r_$key" '%s' "$value"     # creates r_version, r_home, ... for step 5
+      info "$key: $value"
+    done <<<"$r_facts"
+  fi
+else
+  info "skipped: needs ./env"
+fi
+
 printf '\n%d passed, %d warnings, %d failed\n' "$n_pass" "$n_warn" "$n_fail"
 [[ $n_fail -eq 0 ]]                    # exit code 1 if anything failed
 
