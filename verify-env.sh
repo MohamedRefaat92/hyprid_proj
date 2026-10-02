@@ -227,6 +227,42 @@ fi
 
 info "R on this shell's PATH: $(command -v R || echo none)"
 
+section "4. Python (uv)"
+if ! command -v uv >/dev/null; then
+  info "skipped: uv not on PATH"
+else
+  # 3a: uv.lock ↔ pyproject.toml
+  if uv lock --check --offline >/dev/null 2>&1; then
+    pass "uv.lock matches pyproject.toml"
+  else
+    fail "uv.lock is out of date with pyproject.toml" "uv lock, then commit uv.lock"
+  fi
+  # .venv exists
+  have_venv=false
+  if [[ -x .venv/bin/python ]]; then
+    have_venv=true
+    pass ".venv exists"
+  else
+    fail ".venv missing" "uv sync"
+  fi
+  if $have_venv; then
+    if uv sync --check --offline >/dev/null 2>&1; then
+      pass ".venv matches uv.lock"
+    else
+      fail ".venv is out of sync with uv.lock" "uv sync"
+    fi
+    want=$(<.python-version)
+    have=$(.venv/bin/python -c 'import platform; print(platform.python_version())')
+    if [[ $have == "$want" || $have == "$want".* ]]; then
+      pass "Python $have matches .python-version ($want)"
+    else
+      fail "Python $have in .venv, but .python-version pins $want" "rm -rf .venv && uv sync"
+    fi
+  else
+    info "skipped: .venv checks need .venv"
+  fi
+fi
+
 printf '\n%d passed, %d warnings, %d failed\n' "$n_pass" "$n_warn" "$n_fail"
 [[ $n_fail -eq 0 ]]                    # exit code 1 if anything failed
 
