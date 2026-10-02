@@ -127,27 +127,105 @@ if [[ -d .micromamba ]]; then
 fi
 
 section "3. R (./env)"
+
+have_r=false
+r_version="" r_home="" r_lib="" r_renv_project="" r_cc="" r_synced="" renv_active=false
 if $have_env; then
-  r_facts=$(env/bin/Rscript -e '
+  # shellcheck disable=SC2016  # single-quoted R code; $ is R's list operator
+  r_facts=$(PATH=/usr/bin:/bin env/bin/Rscript -e '
     cat("version=", format(getRversion()), "\n", sep = "")
     cat("home=", R.home(), "\n", sep = "")
     cat("lib=", .libPaths()[1], "\n", sep = "")
     cat("renv_project=", Sys.getenv("RENV_PROJECT"), "\n", sep = "")
     cc_name <- system2(file.path(R.home("bin"), "R"), c("CMD", "config", "CC"), stdout = TRUE)
     cat("cc=", Sys.which(strsplit(cc_name, " ")[[1]][1]), "\n", sep = "")
+    s <- tryCatch({ invisible(capture.output(x <- renv::status())); x }, error = function(e) NULL)
+    cat("synced=", if (is.null(s)) "unknown" else s$synchronized, "\n", sep = "")
   ' 2>/dev/null)
 
   if [[ -z $r_facts ]]; then
     fail "env/bin/Rscript produced no output" "run it by hand to see the error: env/bin/Rscript -e 1"
   else
     while IFS='=' read -r key value; do
+      [[ $key =~ ^[a-z_]+$ ]] || continue   # ignore stray output (e.g. renv startup warnings)
       printf -v "r_$key" '%s' "$value"     # creates r_version, r_home, ... for step 5
       info "$key: $value"
     done <<<"$r_facts"
+    have_r=true
   fi
 else
   info "skipped: needs ./env"
 fi
+
+if $have_r; then
+  lock_r=$(env/bin/python -c 'import json; print(json.load(open("renv.lock"))["R"]["Version"])')
+  if [[ $r_version == "$lock_r" ]];then
+    pass "R $r_version matches renv.lock"
+  else
+    fail "R is $r_version but renv.lock was made with R $lock_r" \
+         "if R was upgraded on purpose: reinstall packages, then renv::snapshot(); else rebuild ./env from the lockfile"
+  fi
+    if [[ $r_home == "$root/env/"* ]]; then
+    pass "running R is ./env's R"
+  else
+    fail "the R that ran is not ./env's R: $r_home" \
+         "env/bin/Rscript should launch ./env's R; rebuild the env (rm -rf env && ./bootstrap.sh)"
+  fi
+  if [[ $r_lib == "$root/renv/library/"* ]];then
+    renv_active=true
+    pass "renv library active: ${r_lib#"$root/"}"
+  else
+    fail "R uses $r_lib, not the project's renv library" \
+         "check .Rprofile: missing, guarded out, or activation failed."
+  fi
+  if [[ $r_renv_project == "$root" ]]; then
+    pass "renv activated this project"
+  elif [[ -z $r_renv_project ]]; then
+    fail "renv not activated (RENV_PROJECT is empty)" \
+         "check .Rprofile: missing, guarded out, or activation failed"
+  else
+    fail "renv activated a different project: $r_renv_project" \
+         "a stale RENV_PROJECT? check this shell (echo \$RENV_PROJECT) or the kernel's env, and unset it"
+  fi
+  if [[ $r_synced == TRUE ]]; then
+    pass "renv is synchronized"
+  elif [[ $r_synced == unknown ]]; then
+    info "renv sync: skipped, renv could not be loaded"
+  else
+    fail "renv library is out of sync with renv.lock" \
+         "run env/bin/Rscript -e 'renv::status()' for details: renv::restore() if packages are missing, renv::snapshot() if the lockfile is out of date"
+  fi
+  if [[ $r_cc == "$root/env/"* ]];then
+    pass "C compiler: ${r_cc#"$root/"}"
+  elif [[ -z $r_cc ]];then
+    fail "C compiler not found on R's PATH" "check the PATH block in .Rprofile; rerun ./bootstrap.sh"
+  else
+    warn "C compiler outside ./env: $r_cc" "packages would build with a compiler conda didn't provide; check PATH order"
+  fi
+  if $renv_active; then
+    libs=$(find renv/library -mindepth 2 -maxdepth 5 -name renv | sed 's#/renv$##')
+    active=${r_lib#"$root/"}
+    foreign=$(grep -vxF -- "$active" <<<"$libs")
+    if [[ -z $foreign ]]; then
+      pass "one renv library: $active"
+    else
+      fail "renv libraries from another R: $(paste -sd' ' - <<<"$foreign")" \
+           "delete them (rm -rf <folder>) and find out which R opened this project"
+    fi
+  else
+    info "foreign-library check: skipped, renv library not active"
+  fi
+fi
+if [[ ! -f .Rprofile ]]; then
+  fail ".Rprofile missing, so R starts without the guard, PATH setup or renv" \
+       "restore it: git checkout .Rprofile"
+elif [[ -z $(tail -c1 .Rprofile) ]]; then
+  pass ".Rprofile ends with a newline"
+else
+  fail ".Rprofile does not end with a newline, so R silently skips its last line" "echo >> .Rprofile"
+fi
+
+info "R on this shell's PATH: $(command -v R || echo none)"
 
 printf '\n%d passed, %d warnings, %d failed\n' "$n_pass" "$n_warn" "$n_fail"
 [[ $n_fail -eq 0 ]]                    # exit code 1 if anything failed
