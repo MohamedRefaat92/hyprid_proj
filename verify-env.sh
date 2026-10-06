@@ -442,9 +442,16 @@ EOF
   done <<<"$e_facts"
 fi
 
-# Extensions that interfere with this setup (VS Code's extension folder; read-only listing)
+# Extensions that interfere with this setup (VS Code's extension folder; read-only listing).
+# Uninstalled extensions keep their folder until VS Code cleans up; it lists them in .obsolete.
+ext_dir=$HOME/.vscode/extensions
 for ext in corker.vscode-micromamba donjayamanne.python-environment-manager; do
-  if compgen -G "$HOME/.vscode/extensions/$ext-*" >/dev/null; then
+  installed=false
+  for d in "$ext_dir/$ext"-*; do
+    [[ -d $d ]] || continue
+    grep -qF "\"$(basename "$d")\":true" "$ext_dir/.obsolete" 2>/dev/null || installed=true
+  done
+  if $installed; then
     case $ext in
       corker.*)       why="it points MAMBA_ROOT_PREFIX into the project" ;;
       donjayamanne.*) why="deprecated duplicate of ms-python.vscode-python-envs; confuses interpreter pickers" ;;
