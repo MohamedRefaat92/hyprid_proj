@@ -6,6 +6,16 @@
 #   ./verify-env.sh          fast checks
 #   ./verify-env.sh --deep   also start each kernel and run code
 set -uo pipefail                       # no -e: one failed check must not end the report
+
+deep=false
+for arg in "$@"; do
+  case $arg in
+    --deep)    deep=true ;;
+    -h|--help) sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *)         echo "unknown option: $arg (try --help)" >&2; exit 2 ;;
+  esac
+done
+
 cd "$(dirname "$0")" || exit 1
 root=$PWD
 
@@ -68,7 +78,7 @@ else
   missing=$(comm -23 <(echo "$locked") <(echo "$installed"))
   extra=$(comm -13 <(echo "$locked") <(echo "$installed"))
   if [[ -z $missing ]] && [[ -z $extra ]]; then
-    pass  "./env matches $lock ($(grep -c '^https' "$lock") packages)"
+    pass "./env matches $lock ($(grep -c '^https' "$lock") packages)"
   else
     msg=""
     [[ -n $missing ]] && msg+="missing: $(short <<<"$missing")  "
@@ -91,7 +101,7 @@ else
     pass "all $(wc -w <<<"$names" | tr -d ' ') packages in environment.yml are locked"
   else
     fail "in environment.yml but not in $lock: $unlocked" \
-    "mamba env update -p ./env -f environment.yml, then: conda list -p ./env --explicit --md5 > $lock"
+         "mamba env update -p ./env -f environment.yml, then: conda list -p ./env --explicit --md5 > $lock"
   fi
 fi
 
@@ -165,7 +175,7 @@ if $have_r; then
     fail "R is $r_version but renv.lock was made with R $lock_r" \
          "if R was upgraded on purpose: reinstall packages, then renv::snapshot(); else rebuild ./env from the lockfile"
   fi
-    if [[ $r_home == "$root/env/"* ]]; then
+  if [[ $r_home == "$root/env/"* ]]; then
     pass "running R is ./env's R"
   else
     fail "the R that ran is not ./env's R: $r_home" \
@@ -260,6 +270,243 @@ else
     fi
   else
     info "skipped: .venv checks need .venv"
+  fi
+fi
+
+section "5. Jupyter (./env)"
+kernels=""
+if ! $have_env; then
+  info "skipped: needs ./env"
+else
+  # Facts from the kernelspecs and JupyterLab's config, one per line, fields separated by |
+  j_facts=$(env/bin/python - 2>/dev/null <<'EOF'
+import json, pathlib
+for f in sorted(pathlib.Path("env/share/jupyter/kernels").glob("*/kernel.json")):
+    k = json.loads(f.read_text())
+    print("|".join(["kernel", f.parent.name, k.get("language", ""), k["argv"][0],
+                    k.get("env", {}).get("RENV_PROJECT", "")]))
+try:
+    c = json.loads(pathlib.Path("env/etc/jupyter/jupyter_server_config.json").read_text())
+except FileNotFoundError:
+    c = {}
+print("allowed|" + " ".join(c.get("KernelSpecManager", {}).get("allowed_kernelspecs", [])))
+lsp = c.get("LanguageServerManager", {}).get("language_servers", {}).get("r-languageserver", {})
+print("lsp|" + (lsp.get("argv") or [""])[0])
+EOF
+)
+  if [[ -z $j_facts ]]; then
+    fail "could not read the Jupyter config with env/bin/python" "run the Python block in this section by hand to see the error"
+  else
+    allowed="" lsp=""
+    while IFS='|' read -r kind name lang prog renv; do
+      case $kind in
+        kernel)
+          kernels+="$name "
+          # 4a/4b: the program exists and belongs to the right layer (uv owns Python, conda owns R)
+          if [[ ! -x $prog ]]; then
+            fail "kernel $name: program missing: $prog" "./bootstrap.sh re-registers the kernels"
+          elif [[ $lang == python && $prog == "$root/.venv/"* ]] || [[ $lang == R && $prog == "$root/env/"* ]]; then
+            pass "kernel $name → ${prog#"$root/"}"
+          else
+            fail "kernel $name ($lang) runs $prog, not this project's $lang layer" \
+                 "Python kernels must use .venv, R kernels ./env: rm -rf env/share/jupyter/kernels/$name, or ./bootstrap.sh"
+          fi
+          # 4c: R kernels point renv at this project
+          if [[ $lang == R && $renv != "$root" ]]; then
+            fail "kernel $name points renv at ${renv:-nothing}, not this project" "folder moved or renamed? ./bootstrap.sh"
+          fi
+          ;;
+        allowed) allowed=$name ;;
+        lsp)     lsp=$name ;;
+      esac
+    done <<<"$j_facts"
+
+    if [[ -z $kernels ]]; then
+      fail "no kernels registered in ./env" "./bootstrap.sh"
+    fi
+
+    # 4d/4e: the allowlist and the registered kernels agree
+    if [[ -z $allowed ]]; then
+      warn "no kernel allowlist: JupyterLab offers every kernel, including the env's own python3" "./bootstrap.sh writes it"
+    else
+      allow_ok=true
+      for k in $allowed; do
+        if [[ " $kernels " != *" $k "* ]]; then
+          fail "allowlisted kernel $k does not exist" "./bootstrap.sh"
+          allow_ok=false
+        fi
+      done
+      for k in $kernels; do
+        if [[ " $allowed " != *" $k "* ]]; then
+          warn "kernel $k is hidden in JupyterLab (not allowlisted)" "remove it (rm -rf env/share/jupyter/kernels/$k) or allowlist it"
+          allow_ok=false
+        fi
+      done
+      if $allow_ok; then
+        pass "JupyterLab allowlist matches the kernels: $allowed"
+      fi
+    fi
+
+    # 4f: JupyterLab's R language server is ./env's
+    if [[ -z $lsp ]]; then
+      warn "no R language server configured for JupyterLab" "jupyterlab-lsp would use the first Rscript on PATH; ./bootstrap.sh"
+    elif [[ $lsp == "$root/env/"* ]]; then
+      pass "JupyterLab R language server: ${lsp#"$root/"}"
+    else
+      fail "JupyterLab R language server runs $lsp" "./bootstrap.sh writes the LSP config"
+    fi
+  fi
+fi
+
+section "6. Editors (.vscode/settings.json)"
+if [[ ! -f .vscode/settings.json ]]; then
+  info "skipped: no .vscode/settings.json"
+elif ! $have_env; then
+  info "skipped: needs ./env (its Python reads the file)"
+else
+  case $platform in osx-*) os_key=mac ;; *) os_key=linux ;; esac
+  # settings.json is JSONC (comments, trailing commas), so strip those before parsing.
+  e_facts=$(OS_KEY=$os_key env/bin/python - 2>&1 <<'EOF'
+import json, os, re
+def strip_jsonc(t):
+    out, i, n, in_str = [], 0, len(t), False
+    while i < n:
+        c = t[i]
+        if in_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(t[i + 1]); i += 2; continue
+            if c == '"':
+                in_str = False
+            i += 1
+        elif c == '"':
+            in_str = True; out.append(c); i += 1
+        elif t.startswith("//", i):          # comment to end of line (not inside strings)
+            j = t.find("\n", i); i = n if j < 0 else j
+        elif t.startswith("/*", i):
+            j = t.find("*/", i + 2); i = n if j < 0 else j + 2
+        else:
+            out.append(c); i += 1
+    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))   # trailing commas
+try:
+    s = json.loads(strip_jsonc(open(".vscode/settings.json").read()))
+except Exception as e:
+    print("parse|error|" + str(e).replace("\n", " ")); raise SystemExit
+print("parse|ok|")
+root, key = os.getcwd(), os.environ["OS_KEY"]
+term_key = {"mac": "osx"}.get(key, key)
+def get(*names):
+    for name in names:
+        if name in s:
+            return str(s[name]).replace("${workspaceFolder}", root)
+    return ""
+print("rpath|" + get("r.executablePath", "r.rpath." + key) + "|")
+print("rterm|" + get("r.consolePath", "r.rterm." + key) + "|")
+print("termpath|" + str(s.get("terminal.integrated.env." + term_key, {}).get("PATH", "")).replace("${workspaceFolder}", root) + "|")
+print("condadiscovery|" + str(s.get("positron.r.interpreters.condaDiscovery", "")).lower() + "|")
+EOF
+)
+  while IFS='|' read -r kind value detail; do
+    case $kind in
+      parse)
+        if [[ $value == ok ]]; then
+          pass "settings.json parses (comments allowed)"
+        else
+          fail "settings.json does not parse, so editors silently ignore it: $detail" \
+               "look for a stray character near that position (e.g. a leftover '...')"
+        fi ;;
+      rpath|rterm)
+        what=$([[ $kind == rpath ]] && echo "R extension's R" || echo "R terminal")
+        if [[ -z $value ]]; then
+          warn "VS Code: $what not set" "the R extension would use the first R on PATH; set r.rpath / r.rterm"
+        elif [[ $value == "$root/env/"* && -x $value ]]; then
+          pass "VS Code: $what → ${value#"$root/"}"
+        else
+          fail "VS Code: $what is $value, not ./env's R" "point it at \${workspaceFolder}/env/bin/R"
+        fi ;;
+      termpath)
+        if [[ $value == "$root/env/bin:"* ]]; then
+          pass "integrated terminals put env/bin first on PATH"
+        else
+          warn "integrated terminals don't put env/bin first on PATH" "set terminal.integrated.env.$os_key PATH to \${workspaceFolder}/env/bin:\${env:PATH}"
+        fi ;;
+      condadiscovery)
+        if [[ $value == true ]]; then
+          pass "Positron: conda R discovery on, so ./env's R is listed"
+        else
+          info "Positron: condaDiscovery off; ./env's R won't be listed (VS Code users can ignore this)"
+        fi ;;
+      *)
+        [[ -n $kind ]] && fail "could not read settings.json: $kind" "run the Python block in this section by hand" ;;
+    esac
+  done <<<"$e_facts"
+fi
+
+# Extensions that interfere with this setup (VS Code's extension folder; read-only listing)
+for ext in corker.vscode-micromamba donjayamanne.python-environment-manager; do
+  if compgen -G "$HOME/.vscode/extensions/$ext-*" >/dev/null; then
+    case $ext in
+      corker.*)       why="it points MAMBA_ROOT_PREFIX into the project" ;;
+      donjayamanne.*) why="deprecated duplicate of ms-python.vscode-python-envs; confuses interpreter pickers" ;;
+    esac
+    warn "VS Code extension $ext is installed: $why" "uninstall it"
+  fi
+done
+
+if $deep; then
+  section "7. Kernels, live (--deep)"
+  if [[ -z $kernels ]]; then
+    info "skipped: no kernels found in section 5"
+  else
+    sub=src; [[ -d $sub ]] || sub=.
+    # Start each kernel from a subfolder and ask it which R library / Python it really uses.
+    d_facts=$(cd "$sub" && "$root/env/bin/python" - "$kernels" 2>/dev/null <<'EOF'
+import sys
+import jupyter_client
+from jupyter_client.kernelspec import KernelSpecManager
+code = {"R": "cat(.libPaths()[1])", "python": "import sys; print(sys.executable, end='')"}
+ksm = KernelSpecManager()
+for name in sys.argv[1].split():
+    try:
+        lang = ksm.get_kernel_spec(name).language
+    except Exception:
+        print(f"{name}|error||no kernelspec found"); continue
+    if lang not in code:
+        print(f"{name}|error||no test for language {lang}"); continue
+    try:
+        km, kc = jupyter_client.manager.start_new_kernel(kernel_name=name, startup_timeout=60)
+    except Exception as e:
+        print(f"{name}|error||did not start: {e}".replace("\n", " ")); continue
+    out = []
+    def hook(msg):
+        if msg["msg_type"] == "stream":
+            out.append(msg["content"]["text"])
+    try:
+        status = kc.execute_interactive(code[lang], timeout=60, output_hook=hook)["content"]["status"]
+    except Exception as e:
+        status = f"no reply ({type(e).__name__})"
+    finally:
+        kc.stop_channels()
+        km.shutdown_kernel(now=True)
+    print(f"{name}|{lang}|{status}|{''.join(out).strip()}")
+EOF
+)
+    if [[ -z $d_facts ]]; then
+      fail "could not run the live kernel test" "run the Python block in this section by hand to see the error"
+    fi
+    while IFS='|' read -r name lang status value; do
+      [[ -n $name ]] || continue
+      if [[ $lang == error ]]; then
+        fail "kernel $name: $value" "./bootstrap.sh; open it in JupyterLab to see the full error"
+      elif [[ $status != ok ]]; then
+        fail "kernel $name started, but the test code failed ($status)" "open it in JupyterLab and run the code by hand"
+      elif [[ $lang == R && $value == "$root/renv/library/"* ]] || [[ $lang == python && $value == "$root/.venv/"* ]]; then
+        pass "kernel $name, started from $sub/: ${value#"$root/"}"
+      else
+        fail "kernel $name, started from $sub/, uses ${value:-nothing}" \
+             "R kernels must load renv, Python kernels .venv: check kernel.json and .Rprofile"
+      fi
+    done <<<"$d_facts"
   fi
 fi
 
