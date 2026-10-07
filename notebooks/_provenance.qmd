@@ -1,0 +1,49 @@
+<!-- Provenance: where this report comes from. Three questions, one callout each: -->
+<!-- which code, from which data, through which pipeline steps.                    -->
+
+```{r}
+#| label: provenance-setup
+#| include: false
+source("scripts/R/provenance.R")
+```
+
+::: {.callout-note collapse="false"}
+## Code
+
+```{r}
+#| label: provenance-code
+#| echo: false
+#| output: asis
+cat(code_summary())
+```
+:::
+
+::: {.callout-note collapse="false"}
+## Input data
+
+```{r}
+#| label: provenance-data
+#| echo: false
+#| output: asis
+cat("Catalogued in ", catalogue_summary(), sep = "")
+```
+:::
+
+::: {.callout-note collapse="false"}
+## Pipeline
+
+This report and the targets it depends on.
+
+```{r}
+#| label: provenance-pipeline
+#| echo: false
+#| output: asis
+cat(pipeline_mermaid(), "\n\n_Interactive: drag, zoom, click a node to highlight its neighbours_\n\n")
+```
+
+```{r}
+#| label: provenance-graph
+#| echo: false
+pipeline_graph()
+```
+:::
