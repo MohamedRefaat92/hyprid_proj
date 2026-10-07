@@ -1,7 +1,7 @@
 # Writes the project's R kernelspec into env/share/jupyter/kernels/<name>-r.
-# Run from the project root with the env's R: env/bin/Rscript scripts/register-r-kernel.R <name>
+# Run from the project root with the env's R: env/bin/Rscript scripts/R/register-r-kernel.R <name>
 name <- commandArgs(trailingOnly = TRUE)[1]
-if (is.na(name)) stop("usage: Rscript scripts/register-r-kernel.R <project-name>")
+if (is.na(name)) stop("usage: Rscript scripts/R/register-r-kernel.R <project-name>")
 root   <- normalizePath(".", winslash = "/")
 prefix <- normalizePath(file.path(R.home(), "..", ".."), winslash = "/")  # conda env root
 r_bin  <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "R.exe" else "R")

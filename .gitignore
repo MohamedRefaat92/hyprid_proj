@@ -7,7 +7,7 @@ wheels/
 *.egg-info
 
 # Environments
-env/
+/env/
 .venv/
 .micromamba/
 
@@ -20,3 +20,25 @@ __marimo__/
 .RData
 .Rproj.user/
 
+# Inputs: symlinks are machine-specific; only the README is shared
+# (the reviewed data catalogue lives in metadata/catalogue_data.tsv)
+data/*
+!data/README.md
+
+# Everything generated (rendered reports, archive, targets store) is ignored; only the README and the
+# folder structure (a README in each folder) are shared
+output/**
+!output/**/
+!output/README.md
+!output/reports/latest/README.md
+!output/reports/archive/README.md
+# the targets store, whole (targets puts its own .gitignore inside it, which would expose meta/)
+output/_targets/
+/.quarto/
+**/*.quarto_ipynb
+
+# Machine-generated metadata (review it, then keep a copy without the auto_ prefix)
+metadata/auto_*
+
+# Container images: rebuilt from scripts/containers/*.def
+*.sif

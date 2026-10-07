@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Build (or repair) all project environments. Safe to re-run.
 #
-#   ./bootstrap.sh            exact rebuild from conda-<platform>.lock when one exists
-#   ./bootstrap.sh --resolve  re-solve the conda env from environment.yml instead
+#   scripts/sh/bootstrap.sh            exact rebuild from conda-<platform>.lock when one exists
+#   scripts/sh/bootstrap.sh --resolve  re-solve the conda env from environment.yml instead
 #
 # Needs: Miniforge (mamba + conda) and uv on PATH. macOS/Linux; on Windows use WSL.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/../.."   # run from the project root, wherever this was called from
 # Kernel names allow only letters, digits, '.', '_' and '-'
 name=$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
 
@@ -65,8 +65,7 @@ env/bin/Rscript -e 'renv::restore(prompt = FALSE)'
 
 echo "==> [5/5] Jupyter kernels"
 rm -rf env/share/jupyter/kernels/*   # packages (e.g. ipykernel) ship their own kernelspecs; keep only ours
-
-env/bin/Rscript scripts/register-r-kernel.R "$name"
+env/bin/Rscript scripts/R/register-r-kernel.R "$name"
 # ipykernel warns that ./env "may not be found": that's the .venv's view; env/bin/jupyter finds it
 uv run --locked python -m ipykernel install --prefix ./env \
   --name "$name-py" --display-name "Python ($name · uv)"
