@@ -1,0 +1,2 @@
+file	original_path	host	format	read	size	owner	modified	md5	status	first_catalogued	kind	sample	title	library_strategy	library_type	organism	tissue	cell_type	treatment	molecule	layout	instrument	source	description
+counts.tsv			tsv		5.5 Kb			dc3942398c12dc94b4dfdc554f968857	present	2026-10-06 16:33	processed		Mock expression counts	RNA-Seq		none (simulated)							scripts/mock-data.sh (simulated)	gene x sample count matrix; first column: gene
