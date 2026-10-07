@@ -24,3 +24,6 @@ dev = [
     "ipykernel>=7.3.0",
     "marimo>=0.25.0",
 ]
+
+[tool.uv.build-backend]
+module-root = "src/python"   # analysis code lives in src/<language>/

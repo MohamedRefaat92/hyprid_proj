@@ -21,6 +21,16 @@ local({
     file.path(prefix, "bin")
   }
   Sys.setenv(PATH = paste(c(bins, Sys.getenv("PATH")), collapse = .Platform$path.sep))
+
+  # conda's quarto only works with the variables its activation script sets (QUARTO_SHARE_PATH, ...).
+  # Apply just those, not a full activation, which would also change compiler settings.
+  act <- file.path(prefix, "etc", "conda", "activate.d", "quarto.sh")
+  if (file.exists(act)) {
+    for (line in grep("^[[:space:]]*export [A-Z_]+=", readLines(act), value = TRUE)) {
+      kv <- sub("^[[:space:]]*export ", "", line)
+      do.call(Sys.setenv, stats::setNames(list(sub("^[^=]*=", "", kv)), sub("=.*$", "", kv)))
+    }
+  }
 })
 
 # conda R cannot use CRAN macOS binaries, so always build from source

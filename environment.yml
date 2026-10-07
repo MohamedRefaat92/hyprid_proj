@@ -21,6 +21,8 @@ dependencies:
   # Jupyter front end (kernels come from uv and renv)
   - jupyterlab
   - jupyterlab-lsp
+  # Reports (rendered by targets via tar_quarto)
+  - quarto>=1.9
   # CLI tools
   - samtools
   - bedtools

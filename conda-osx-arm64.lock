@@ -3,12 +3,13 @@
 # platform: osx-arm64
 # created-by: conda 26.7.2
 @EXPLICIT
-https://conda.anaconda.org/conda-forge/osx-arm64/pandoc-3.11-hce30654_0.conda#a2f9df29541bc9c9ec08950fcedfea84
 https://conda.anaconda.org/conda-forge/noarch/_r-mutex-1.0.1-anacondar_1.tar.bz2#19f9db5f4f1b7f5ef5f6d67207f25f38
 https://conda.anaconda.org/conda-forge/osx-arm64/bzip2-1.0.8-h4e30115_10.conda#b50612e7d190b8061ab4e7dc119cf4d5
 https://conda.anaconda.org/conda-forge/osx-arm64/c-ares-1.34.8-h74c22ad_2.conda#4cc01a374215de38387d45e19c8c5c9c
 https://conda.anaconda.org/conda-forge/noarch/ca-certificates-2026.7.22-hbd8a1cb_0.conda#0f51e2391ade309db462a55611263e9c
 https://conda.anaconda.org/conda-forge/noarch/compiler-rt21_osx-arm64-21.1.8-hb8825d9_2.conda#93f5de189aa3dca7d88ae1d16a0c9754
+https://conda.anaconda.org/conda-forge/osx-arm64/dart-sass-1.105.1-h820172f_0.conda#e827562ac1cbd7d2d87bc8ab4ad3c538
+https://conda.anaconda.org/conda-forge/osx-arm64/esbuild-0.28.1-hf76c51c_0.conda#7023b247571c6428ac7752c87193d68d
 https://conda.anaconda.org/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2#0c96522c6bdaed4b1566d11387caaf45
 https://conda.anaconda.org/conda-forge/noarch/font-ttf-inconsolata-3.000-h77eed37_0.tar.bz2#34893075a5c9e55cdafac56607368fc6
 https://conda.anaconda.org/conda-forge/noarch/font-ttf-source-code-pro-2.038-h77eed37_0.tar.bz2#4d59c254e01d9cde7957100457e2d5fb
@@ -33,14 +34,17 @@ https://conda.anaconda.org/conda-forge/osx-arm64/libzlib-1.3.2-h8088a28_3.conda#
 https://conda.anaconda.org/conda-forge/osx-arm64/llvm-openmp-23.1.2-hdb3d66b_0.conda#97fa48b6e1d996689e6d3f822a41f1bf
 https://conda.anaconda.org/conda-forge/osx-arm64/make-4.4.1-h84a0fba_3.conda#5e4c7921fa8489236f1599274b478bac
 https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.6-he64c551_1.conda#3dfa0d0316dc246cd44937a557de4501
+https://conda.anaconda.org/conda-forge/osx-arm64/pandoc-3.8.3-hce30654_0.conda#68bc0f4209fe5cbb03a401177f3a36c2
 https://conda.anaconda.org/conda-forge/noarch/python_abi-3.14-9_cp314.conda#350d89b50d7de805abf2e63e29dee451
 https://conda.anaconda.org/conda-forge/noarch/sdkroot_env_osx-arm64-26.0-ha3f98da_7.conda#5f0ebbfea12d8e5bddff157e271fdb2f
+https://conda.anaconda.org/conda-forge/osx-arm64/typst-0.14.2-hd1458d2_0.conda#750223ac708cb65d0d32fa61d84e35e4
 https://conda.anaconda.org/conda-forge/noarch/tzdata-2026c-h151e31d_0.conda#fcb489df604d100968b737f2cb6076c6
 https://conda.anaconda.org/conda-forge/osx-arm64/yaml-0.2.5-h74c22ad_3.conda#31cf6dcc138abe673c9440cd6fe6c6fe
 https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-8_kmp_llvm.conda#a2d706b4a7d603524133037c34f7fb76
 https://conda.anaconda.org/bioconda/osx-arm64/bedtools-2.31.1-he85ad4a_3.tar.bz2#098e54e6b442c7c65be261cae3c7aa0b
 https://conda.anaconda.org/conda-forge/osx-arm64/compiler-rt21-21.1.8-hdb3d66b_2.conda#df63e236c76f7b443db681db51a73682
 https://conda.anaconda.org/conda-forge/noarch/compiler-rt_osx-arm64-21.1.8-hce30654_2.conda#1756ab5909480865183f5eee080e66dd
+https://conda.anaconda.org/conda-forge/osx-arm64/deno-2.4.5-h248350f_0.conda#2190a7bbed5d068ea14c6dc9db1c0f09
 https://conda.anaconda.org/conda-forge/noarch/fonts-conda-forge-1-hc364b38_1.conda#a7970cd949a077b7cb9696379d338681
 https://conda.anaconda.org/conda-forge/osx-arm64/gmp-6.3.0-hf5e55b1_3.conda#bbfa5bd261b68536ddcda39e03d3407f
 https://conda.anaconda.org/conda-forge/osx-arm64/graphite2-1.3.15-h784d473_1.conda#0c7b78d9ffff4f5a6ca28d346f734d8f
@@ -65,6 +69,7 @@ https://conda.anaconda.org/conda-forge/osx-arm64/zlib-1.3.2-h8088a28_3.conda#2c9
 https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda#4ec2684c73812cc2c3d78379384a39cc
 https://conda.anaconda.org/conda-forge/osx-arm64/bwidget-1.10.1-h820172f_3.conda#bf63d8bbfb2a5a51b2d652e0100d6150
 https://conda.anaconda.org/conda-forge/osx-arm64/compiler-rt-21.1.8-hce30654_2.conda#129de7382248e851078a1c4bbde92756
+https://conda.anaconda.org/conda-forge/osx-arm64/deno-dom-0.1.41-h99eee54_1.conda#34b68bea47a46b15ef94b80c0d0a808a
 https://conda.anaconda.org/conda-forge/noarch/fonts-conda-ecosystem-1-0.tar.bz2#fee5683a3f04bd15cbd8318b096a27ab
 https://conda.anaconda.org/conda-forge/osx-arm64/gettext-tools-0.25.1-hae62183_2.conda#7df4cdd6e82f32fc964f2c21aea04046
 https://conda.anaconda.org/conda-forge/osx-arm64/krb5-1.22.2-h34f8a20_2.conda#15235dd10450d67bc25ccafd5b46d2bc
@@ -124,6 +129,7 @@ https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda#4
 https://conda.anaconda.org/conda-forge/noarch/python-fastjsonschema-2.22.2-pyhcf101f3_0.conda#aa75b7f096d17621bc307b3025b29461
 https://conda.anaconda.org/conda-forge/noarch/python-tzdata-2026.4-pyh5ded981_0.conda#6fc085ba8fa446b73bff580281b21ce3
 https://conda.anaconda.org/conda-forge/osx-arm64/pyyaml-6.0.3-py314h6e9b3f0_1.conda#dcf51e564317816cb8d546891019b3ab
+https://conda.anaconda.org/conda-forge/osx-arm64/quarto-1.9.38-h2349ac6_0.conda#9263986f1f93816717e67cee657dc4c4
 https://conda.anaconda.org/conda-forge/noarch/rfc3986-validator-0.1.1-pyh9f0ad1d_0.tar.bz2#912a71cc01012ee38e6b90ddd561e36f
 https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-2026.6.3-py314hc05cd11_2.conda#fb944378df3143d95854b319fdb0ff87
 https://conda.anaconda.org/conda-forge/noarch/setuptools-84.0.0-pyh332efcf_0.conda#62ac906f1cd582c6c264c95625cb9d6f
