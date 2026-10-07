@@ -36,6 +36,10 @@ output/**
 output/_targets/
 /.quarto/
 **/*.quarto_ipynb
+# Temporary files Quarto and knitr write next to a report while it renders (deleted afterwards)
+*.rmarkdown
+*.knit.md
+notebooks/**/*_files/
 
 # Machine-generated metadata (review it, then keep a copy without the auto_ prefix)
 metadata/auto_*
