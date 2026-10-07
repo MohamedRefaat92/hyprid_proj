@@ -1,34 +1,28 @@
-<!-- Provenance: where this report comes from. Three questions, one callout each: -->
-<!-- which code, from which data, through which pipeline steps.                    -->
+<!-- Provenance: where this report comes from. A checklist (code, R packages, pipeline, input   -->
+<!-- data) coloured green / amber / red, then the input files and the pipeline graph.             -->
+<!-- Code: scripts/R/provenance.R                                                                  -->
 
 ```{r}
-#| label: provenance-setup
-#| include: false
-source("scripts/R/provenance.R")
-```
-
-::: {.callout-note collapse="false"}
-## Code
-
-```{r}
-#| label: provenance-code
+#| label: provenance
 #| echo: false
 #| output: asis
-cat(code_summary())
+source("scripts/R/provenance.R")
+prov <- collect_provenance()
+cat(render_summary(prov))
 ```
-:::
 
-::: {.callout-note collapse="false"}
+::: {.callout-note collapse="true"}
 ## Input data
 
 ```{r}
 #| label: provenance-data
 #| echo: false
 #| output: asis
-cat("Catalogued in ", catalogue_summary(), sep = "")
+cat(render_inputs(prov))
 ```
 :::
 
+<!-- Not collapsed: graphs drawn inside a collapsed section render blank -->
 ::: {.callout-note collapse="false"}
 ## Pipeline
 
@@ -38,12 +32,12 @@ This report and the targets it depends on.
 #| label: provenance-pipeline
 #| echo: false
 #| output: asis
-cat(pipeline_mermaid(), "\n\n_Interactive: drag, zoom, click a node to highlight its neighbours_\n\n")
+cat(pipeline_mermaid(prov), "\n\n_Interactive: drag, zoom, click a node to highlight its neighbours_\n\n")
 ```
 
 ```{r}
 #| label: provenance-graph
 #| echo: false
-pipeline_graph()
+pipeline_graph(prov)
 ```
 :::

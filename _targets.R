@@ -23,7 +23,7 @@ list(
   tar_target(orphan_example, "not used by any report"),
 
   # Reports: one folder per report under notebooks/, rendered to output/reports/latest/
-  # extra_files: also re-render when the report style, the provenance helper it sources, or the reviewed data catalogue changes
+  # extra_files: also re-render when the report style, the provenance helper, the reviewed data catalogue or renv.lock changes
   tar_quarto(example_report, "notebooks/example-report/example-report.qmd",
-             extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv"))
+             extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))
 )

@@ -101,7 +101,7 @@ scripts/sh/run-pipeline.sh                          # run targets, then snapshot
 
 - **Inputs:** declare each file the pipeline reads (data in `data/`, metadata such as the sample sheet in `metadata/`) in `_targets.R` as a file target (`tar_target(counts_file, "data/counts.tsv", format = "file")`), so targets re-runs what depends on it when the file changes.
 - **Analysis:** functions in `src/R/`, wired together in `_targets.R`. targets runs only what is out of date.
-- **Reports:** each report is a folder `notebooks/<report>/<report>.qmd`, added to `_targets.R` with `tar_quarto(<name>, <path>, extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv"))`; `extra_files` re-renders it when the report style, the provenance helper it sources, or the reviewed data catalogue changes. A report reads results with `tar_read()`, starts with the provenance block and ends with the session info:
+- **Reports:** each report is a folder `notebooks/<report>/<report>.qmd`, added to `_targets.R` with `tar_quarto(<name>, <path>, extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))`; `extra_files` re-renders it when the report style, the provenance helper, the reviewed data catalogue or renv.lock changes. A report reads results with `tar_read()`, starts with the provenance block and ends with the session info:
 
   ```markdown
   {{< include ../_provenance.qmd >}}
@@ -109,15 +109,23 @@ scripts/sh/run-pipeline.sh                          # run targets, then snapshot
   {{< include ../_session-info.qmd >}}
   ```
 
-  The provenance block (where the report comes from) answers three questions, one callout each:
+  The provenance block (where the report comes from) starts with a **Provenance** checklist (folded; its colour shows the result without opening it), one row per check, each marked ✓ or ✘; the box is green when the report can be reproduced exactly from its commit, amber or red otherwise:
+
+  | Check | ✓ when | ✘ amber (check before trusting) | ✘ red (can't be trusted as rendered) |
+  | --- | --- | --- | --- |
+  | **Code** | everything is committed (links to the commit on GitHub, once pushed) | uncommitted files, listed | |
+  | **R packages** | they match `renv.lock` | they differ (or renv isn't active) | |
+  | **Pipeline** | built by targets; shows the upstream fingerprint | rendered outside the pipeline (`scripts/sh/quarto.sh`), so upstream results may be stale | |
+  | **Input data** | every input verified | an input in `data/` isn't in the reviewed catalogue | an input is missing, or differs from its md5 in the catalogue |
+
+  The **upstream fingerprint** is one hash of the results of every target the report depends on: identical fingerprints mean identical upstream results, on any machine and from any commit. Below the checklist, two callouts:
 
   | Callout | Shows |
   | --- | --- |
-  | **Code** | the commit (nearest tag), linked on GitHub (once pushed); "(uncommitted changes)" if anything differed from it, including new files not yet added; when and on which machine it was rendered |
-  | **Input data** | the reviewed data catalogue, linked as of that commit (same "(uncommitted changes)" rule), with the number of files per kind and format |
-  | **Pipeline** | this report and the targets it depends on, as a static Mermaid diagram and an interactive graph (targets that don't feed the report are left out) |
+  | **Input data** (collapsed) | every file the report's pipeline read (its upstream file targets): path, kind, size, md5, and its check (files in `data/` against the reviewed catalogue; files in `metadata/` are covered by git) |
+  | **Pipeline** (open; graphs inside collapsed sections render blank) | this report and the targets it depends on, as a static Mermaid diagram and an interactive graph (targets that don't feed the report are left out) |
 
-  The session info at the end (R and package versions) is a collapsed `sessionInfo()`.
+  The session info at the end (R and package versions) is a collapsed `sessionInfo()`. All of it comes from `scripts/R/provenance.R`: `collect_provenance()` gathers the facts and the checks into one list; `render_summary()`, `render_inputs()` and the pipeline functions display them.
 - **Report artifacts:** save figures and tables a report produces to `out <- report_dir()` (from `scripts/R/provenance.R`, called once in the setup chunk). That is `artifacts/` next to the report's HTML in `output/reports/latest/`, emptied at each render, so a snapshot only contains what the latest render produced.
 - **Report style and author:** set once in `_quarto.yml` (theme, numbered sections, table of contents, code menu, paged tables) along with the `author` (name, email) and `date: today` shown at the top of every report. A report can override any of these in its own front matter.
 - **Snapshots:** the pipeline renders each report to a fixed place, `output/reports/latest/…`, so targets can tell whether it is up to date. `run-pipeline.sh` then copies every report it re-rendered to `output/reports/archive/<YYYY-MM-DD>/<report>_<YYYY-MM-DD_HH-MM>/`, which is never modified again. `scripts/sh/snapshot-report.sh <report>` takes a snapshot by hand. Always zip and share the whole snapshot folder: the HTML links to the files next to it.
@@ -173,7 +181,7 @@ The exit code is 0 only if nothing failed, so it can gate other commands: `scrip
 | To add | Do | Then record it |
 | --- | --- | --- |
 | An input | `scripts/sh/link-input.sh <path> [name]`, `scripts/sh/catalogue-data.sh`, then a file target in `_targets.R` | review the auto catalogue, copy it to `metadata/catalogue_data.tsv`, describe the file, commit |
-| A report | `notebooks/<report>/<report>.qmd` with the provenance and session-info includes, then `tar_quarto(…, extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv"))` in `_targets.R` | commit the `.qmd` and `_targets.R` |
+| A report | `notebooks/<report>/<report>.qmd` with the provenance and session-info includes, then `tar_quarto(…, extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))` in `_targets.R` | commit the `.qmd` and `_targets.R` |
 | A Python package | `uv add <pkg>` (`uv add --dev <pkg>` for tooling such as ipykernel) | automatic (`uv.lock`) |
 | An R package | `renv::install("<pkg>")`, and use it in code or list it in `_dependencies.R` | `renv::snapshot()` |
 | A C library, compiler tool or CLI tool | add it to `environment.yml`, then `mamba env update -p ./env -f environment.yml` | `conda list -p ./env --explicit --md5 > conda-osx-arm64.lock` |
@@ -205,7 +213,7 @@ The exit code is 0 only if nothing failed, so it can gate other commands: `scrip
 - `scripts/sh/run-pipeline.sh`, `scripts/sh/snapshot-report.sh`, `scripts/sh/link-input.sh`, `scripts/sh/catalogue-data.sh`, `scripts/sh/mock-data.sh`, `scripts/sh/quarto.sh`: data and pipeline workflow (see The pipeline and its reports)
 - `scripts/R/register-r-kernel.R`: writes the R kernelspec (called by `bootstrap.sh`)
 - `metadata/catalogue_data.tsv`: the reviewed data catalogue (committed); `metadata/auto_catalogue_data.tsv`: its machine-generated draft (git-ignored)
-- `scripts/R/provenance.R`: `code_summary()`, `catalogue_summary()`, `git_version()`, `has_uncommitted()`, `git_commit_url()`, `report_dir()`, `pipeline_mermaid()`, `pipeline_graph()` (used by the pipeline and the reports); `scripts/R/catalogue.R`: the data catalogue; `scripts/R/mock-data.R`: the example inputs
+- `scripts/R/provenance.R`: `collect_provenance()` (facts and checks) and `render_summary()`, `render_inputs()`, `pipeline_mermaid()`, `pipeline_graph()` (display); `report_dir()` (used by the pipeline and the reports); `scripts/R/catalogue.R`: the data catalogue; `scripts/R/mock-data.R`: the example inputs
 - `notebooks/_provenance.qmd`, `notebooks/_session-info.qmd`: the blocks every report includes at its top and end
 - `.Rprofile`: refuses foreign R installations; puts `env/bin` on PATH and sets Quarto's variables; sets repos and source-only installs; activates renv; saves R history
 - `_dependencies.R`: R packages the project needs that code doesn't load directly (never sourced; renv reads it)
