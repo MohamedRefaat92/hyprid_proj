@@ -31,9 +31,10 @@ project/
 ├── notebooks/                  <report>/<report>.qmd (rendered by the pipeline) + exploration (marimo, .ipynb)
 ├── output/                     EVERYTHING GENERATED (git-ignored; only the READMEs are shared)
 │   ├── _targets/               targets store
-│   └── reports/
-│       ├── latest/             latest render of each report (managed by targets; fixed paths)
-│       └── archive/<date>/<report>_<date_time>/   frozen snapshots to zip and share
+│   ├── reports/
+│   │   ├── latest/             latest render of each report (managed by targets; fixed paths)
+│   │   └── archive/<date>/<report>_<date_time>/   frozen snapshots to zip and share
+│   └── dashboard/              tables for the dashboard (Parquet), written by the pipeline
 └── scripts/                    project machinery (not analysis), by format
     ├── sh/                     entry points you run (bootstrap, verify-env, run-pipeline, ...)
     ├── R/                      R helpers the scripts and reports call (kernel registration, data catalogue,
@@ -133,6 +134,28 @@ scripts/sh/run-pipeline.sh                          # run targets, then snapshot
 
 `example-report`, `src/R/example.R` and the mock data show the whole flow; replace them with your own.
 
+## Dashboard
+
+An interactive dashboard (a small Shiny app) for the pipeline's processed tables: embeddings (UMAP, PCA) and values (UMI counts, expression).
+
+```bash
+scripts/sh/run-pipeline.sh     # writes the tables to output/dashboard/
+scripts/sh/dashboard.sh        # opens the dashboard in the browser (Ctrl+C to stop); optional port, default 8050
+```
+
+The pipeline saves tables with `write_dashboard_table(<data frame>, <name>)` (`scripts/R/dashboard.R`) into `output/dashboard/`; the dashboard reads whatever is there, by file name:
+
+| File | Columns | In the dashboard |
+| --- | --- | --- |
+| `cells.parquet` | `cell` + annotation columns (`cluster`, `sample`, ...) | colours and groups |
+| `embedding_<name>.parquet` | `cell`, `dim1`, `dim2` | one choice per embedding (opens on `umap` if present) |
+| `values_<name>.parquet` | `cell`, `feature`, `value`: **long, non-zero entries only** (`long_values(<matrix>)` converts a features x cells matrix) | one choice per value table; a feature to colour the cells by, its violin plot per group, and the top features per group |
+
+- **Size:** Parquet with zstd compression, values stored long and sparse (single-cell matrices are mostly zeros): the example's raw UMI table is about 10x smaller than the same table as CSV.
+- **Example:** `dashboard_tables` in `_targets.R` simulates 1,000 cells (`src/R/example-single-cell.R`): raw and normalised UMI counts, PCA, and a simulated UMAP. Replace it with your own results.
+- **On the cluster:** run `scripts/sh/dashboard.sh` there (no browser opens), then on your laptop `ssh -L 8050:localhost:8050 <cluster>` and open http://localhost:8050.
+- The app is one file, `scripts/R/dashboard-app.R`, to extend as a project needs.
+
 ## Starting a new project from this template
 
 1. On GitHub, **Use this template → Create a new repository**, then clone the new repository.
@@ -210,9 +233,10 @@ The exit code is 0 only if nothing failed, so it can gate other commands: `scrip
 
 - `scripts/sh/bootstrap.sh`: builds or repairs every layer (see Setup)
 - `scripts/sh/verify-env.sh`: read-only check of every layer and how they connect (see Checking the environment)
-- `scripts/sh/run-pipeline.sh`, `scripts/sh/snapshot-report.sh`, `scripts/sh/link-input.sh`, `scripts/sh/catalogue-data.sh`, `scripts/sh/mock-data.sh`, `scripts/sh/quarto.sh`: data and pipeline workflow (see The pipeline and its reports)
+- `scripts/sh/run-pipeline.sh`, `scripts/sh/snapshot-report.sh`, `scripts/sh/dashboard.sh`, `scripts/sh/link-input.sh`, `scripts/sh/catalogue-data.sh`, `scripts/sh/mock-data.sh`, `scripts/sh/quarto.sh`: data and pipeline workflow (see The pipeline and its reports)
 - `scripts/R/register-r-kernel.R`: writes the R kernelspec (called by `bootstrap.sh`)
 - `metadata/catalogue_data.tsv`: the reviewed data catalogue (committed); `metadata/auto_catalogue_data.tsv`: its machine-generated draft (git-ignored)
+- `scripts/R/dashboard.R` (writes the dashboard tables), `scripts/R/dashboard-app.R` (the dashboard)
 - `scripts/R/provenance.R`: `collect_provenance()` (facts and checks) and `render_summary()`, `render_inputs()`, `pipeline_mermaid()`, `pipeline_graph()` (display); `report_dir()` (used by the pipeline and the reports); `scripts/R/catalogue.R`: the data catalogue; `scripts/R/mock-data.R`: the example inputs
 - `notebooks/_provenance.qmd`, `notebooks/_session-info.qmd`: the blocks every report includes at its top and end
 - `.Rprofile`: refuses foreign R installations; puts `env/bin` on PATH and sets Quarto's variables; sets repos and source-only installs; activates renv; saves R history
