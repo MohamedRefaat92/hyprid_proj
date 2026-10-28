@@ -4,8 +4,8 @@
 library(targets)
 library(tarchetypes)
 
-tar_source(c("src/R", "scripts/R/provenance.R", "scripts/R/dashboard.R"))   # analysis functions + bookkeeping
-# (not all of scripts/R: some files run when sourced, e.g. register-r-kernel.R, dashboard-app.R)
+tar_source(c("src/R", "scripts/R/provenance.R"))   # analysis functions + bookkeeping
+# (not all of scripts/R: some files run when sourced, e.g. register-r-kernel.R)
 
 list(
   # Inputs as file targets: targets re-runs everything downstream when a file's content changes.
@@ -20,17 +20,14 @@ list(
   tar_target(gene_summary, summarise_genes(logcpm, samples)),
   tar_target(gene_plot, plot_genes(gene_summary)),
 
-  # Example single-cell data for the dashboard (scripts/sh/dashboard.sh): simulated, replace with your own
-  tar_target(sc, simulate_single_cell(n_cells = 1000)),
-  tar_target(sc_normalized, normalize_counts(sc$counts)),
-  tar_target(sc_pca, run_pca(sc_normalized)),
-  tar_target(dashboard_tables, c(                                  # output/dashboard/*.parquet
-    write_dashboard_table(sc$cells, "cells"),
-    write_dashboard_table(sc$umap, "embedding_umap"),
-    write_dashboard_table(sc_pca, "embedding_pca"),
-    write_dashboard_table(long_values(sc$counts), "values_raw_umi"),
-    write_dashboard_table(long_values(sc_normalized), "values_normalized")
-  ), format = "file"),
+  # Example multiome data for the dashboard (scripts/sh/dashboard.sh): simulated in Python, replace with your own
+  tar_target(example_multiome_code, "src/python/hyprid_proj/example_multiome.py", format = "file"),
+  tar_target(dashboard_example, {
+    out <- "output/dashboard/example_multiome.h5mu"
+    status <- system2("uv", c("run", "python", example_multiome_code, out))
+    if (status != 0) stop("the Python simulation failed (output above)")
+    out
+  }, format = "file"),
 
   # Not used by any report: it stays out of the report's pipeline graph
   tar_target(orphan_example, "not used by any report"),

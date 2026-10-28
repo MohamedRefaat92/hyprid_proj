@@ -34,7 +34,7 @@ project/
 │   ├── reports/
 │   │   ├── latest/             latest render of each report (managed by targets; fixed paths)
 │   │   └── archive/<date>/<report>_<date_time>/   frozen snapshots to zip and share
-│   └── dashboard/              tables for the dashboard (Parquet), written by the pipeline
+│   └── dashboard/              .h5ad / .h5mu files to open in the dashboard
 └── scripts/                    project machinery (not analysis), by format
     ├── sh/                     entry points you run (bootstrap, verify-env, run-pipeline, ...)
     ├── R/                      R helpers the scripts and reports call (kernel registration, data catalogue,
@@ -136,24 +136,33 @@ scripts/sh/run-pipeline.sh                          # run targets, then snapshot
 
 ## Dashboard
 
-An interactive dashboard (a small Shiny app) for the pipeline's processed tables: embeddings (UMAP, PCA) and values (UMI counts, expression).
+Look up features (genes, peaks, ...) in single-cell data without writing code: a Shiny app over an `.h5ad` (AnnData) file, several `.h5ad` files (one per modality of the same cells, e.g. multiome RNA and ATAC), or an `.h5mu` (MuData).
 
 ```bash
-scripts/sh/run-pipeline.sh     # writes the tables to output/dashboard/
-scripts/sh/dashboard.sh        # opens the dashboard in the browser (Ctrl+C to stop); optional port, default 8050
+scripts/sh/run-pipeline.sh                     # writes the example: output/dashboard/example_multiome.h5mu
+scripts/sh/dashboard.sh                        # opens the only .h5ad/.h5mu in output/dashboard/ (Ctrl+C to stop)
+scripts/sh/dashboard.sh path/to/file.h5ad      # or any file; --port to change the default 8050
+scripts/sh/dashboard.sh my_data_rna.h5ad my_data_atac.h5ad   # one file per modality: tabs rna and atac
+scripts/sh/dashboard.sh file.h5mu --shared     # reachable by lab members on the server's network
 ```
 
-The pipeline saves tables with `write_dashboard_table(<data frame>, <name>)` (`scripts/R/dashboard.R`) into `output/dashboard/`; the dashboard reads whatever is there, by file name:
-
-| File | Columns | In the dashboard |
-| --- | --- | --- |
-| `cells.parquet` | `cell` + annotation columns (`cluster`, `sample`, ...) | colours and groups |
-| `embedding_<name>.parquet` | `cell`, `dim1`, `dim2` | one choice per embedding (opens on `umap` if present) |
-| `values_<name>.parquet` | `cell`, `feature`, `value`: **long, non-zero entries only** (`long_values(<matrix>)` converts a features x cells matrix) | one choice per value table; a feature to colour the cells by, its violin plot per group, and the top features per group |
-
-- **Size:** Parquet with zstd compression, values stored long and sparse (single-cell matrices are mostly zeros): the example's raw UMI table is about 10x smaller than the same table as CSV.
-- **Example:** `dashboard_tables` in `_targets.R` simulates 1,000 cells (`src/R/example-single-cell.R`): raw and normalised UMI counts, PCA, and a simulated UMAP. Replace it with your own results.
-- **On the cluster:** run `scripts/sh/dashboard.sh` there (no browser opens), then on your laptop `ssh -L 8050:localhost:8050 <cluster>` and open http://localhost:8050.
+- **Sidebar** (applies to every tab): the embedding, **Group by** and **Split by**: any categorical annotation (clusters, samples, conditions, ...).
+- **One tab per modality** (one tab, "expression", for a single `.h5ad`): pick a feature, then see the cells coloured by group and by the feature (side by side, one small plot per split group), its violin plot per group, and a table of cells, % expressing and mean per group.
+- **What a file needs:** annotations as categorical (or text) `obs` columns, embeddings in `obsm` (`X_umap`, `X_pca`, ...; only the first two dimensions are plotted), the values to show in `X` (layers are not shown).
+- **One `.h5ad` per modality:** name them `<dataset>_<modality>.h5ad`. The annotations and embeddings come from the first file that has embeddings (its tab comes first), so the order on the command line does not matter; the other files need only `X` (their own embeddings are added as `<modality>:<key>`); cells missing from that file are left out. No `.h5mu` is written.
+- **An `.h5mu`:** annotations and joint embeddings at the top level (`mdata.obs`, `mdata.obsm`; `mdata.pull_obs()` copies modality columns there); each modality's `X` and its own embeddings in the modality.
+- **From Seurat:** one `anndataR::write_h5ad()` per assay (Bioconductor packages `anndataR` and `rhdf5`):
+  ```r
+  anndataR::write_h5ad(srt, "output/dashboard/my_data_rna.h5ad", assay_name = "SCT", x_mapping = "data",
+                       layers_mapping = FALSE, obsp_mapping = FALSE,               # by default every layer and graph is copied
+                       obsm_mapping = list(X_umap = "umap", X_pca = "pca"))       # Reductions(srt) lists the names
+  anndataR::write_h5ad(srt, "output/dashboard/my_data_atac.h5ad", assay_name = "ATAC", x_mapping = "data",
+                       layers_mapping = FALSE, obsp_mapping = FALSE, obsm_mapping = FALSE)   # reductions are already in the first file
+  ```
+  Without `layers_mapping = FALSE`, each file also holds every layer (counts, and `data` a second time): about 3x the size, none of it shown.
+- **First open:** `scripts/py/dashboard.py` writes `<dataset>/` next to the (first) file (again when a file changes): the annotations, the embeddings, and each modality's values stored feature by feature, so a feature is one small read from disk whatever the size of the data. It takes seconds for 50,000 cells, and about as much disk space as the `.h5ad`.
+- **Example:** `dashboard_example` in `_targets.R` runs `src/python/hyprid_proj/example_multiome.py`: 1,000 cells with RNA (300 genes) and ATAC (2,000 peaks), a UMAP per modality and a joint one. Replace it with your own results.
+- **Sharing:** `--shared` serves to the server's network: anyone who can reach that port sees the data, so use it only on an internal server. Without it, only this machine; from a laptop: `ssh -L 8050:localhost:8050 <server>` and open http://localhost:8050.
 - The app is one file, `scripts/R/dashboard-app.R`, to extend as a project needs.
 
 ## Starting a new project from this template
@@ -236,7 +245,7 @@ The exit code is 0 only if nothing failed, so it can gate other commands: `scrip
 - `scripts/sh/run-pipeline.sh`, `scripts/sh/snapshot-report.sh`, `scripts/sh/dashboard.sh`, `scripts/sh/link-input.sh`, `scripts/sh/catalogue-data.sh`, `scripts/sh/mock-data.sh`, `scripts/sh/quarto.sh`: data and pipeline workflow (see The pipeline and its reports)
 - `scripts/R/register-r-kernel.R`: writes the R kernelspec (called by `bootstrap.sh`)
 - `metadata/catalogue_data.tsv`: the reviewed data catalogue (committed); `metadata/auto_catalogue_data.tsv`: its machine-generated draft (git-ignored)
-- `scripts/R/dashboard.R` (writes the dashboard tables), `scripts/R/dashboard-app.R` (the dashboard)
+- `scripts/R/dashboard-app.R`: the dashboard (Shiny); `scripts/py/dashboard.py`: prepares a file for it (both started by `scripts/sh/dashboard.sh`)
 - `scripts/R/provenance.R`: `collect_provenance()` (facts and checks) and `render_summary()`, `render_inputs()`, `pipeline_mermaid()`, `pipeline_graph()` (display); `report_dir()` (used by the pipeline and the reports); `scripts/R/catalogue.R`: the data catalogue; `scripts/R/mock-data.R`: the example inputs
 - `notebooks/_provenance.qmd`, `notebooks/_session-info.qmd`: the blocks every report includes at its top and end
 - `.Rprofile`: refuses foreign R installations; puts `env/bin` on PATH and sets Quarto's variables; sets repos and source-only installs; activates renv; saves R history

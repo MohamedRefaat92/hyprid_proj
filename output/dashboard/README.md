@@ -1,12 +1,8 @@
 # output/dashboard/
 
-Tables for the dashboard, written by the pipeline (`dashboard_tables` in `_targets.R`, using
-`write_dashboard_table()` from `scripts/R/dashboard.R`). Open the dashboard with `scripts/sh/dashboard.sh`.
+Single-cell results to look up in the dashboard: `.h5ad` (AnnData) files, one per modality for
+multimodal data (`<dataset>_<modality>.h5ad`), or `.h5mu` (MuData) files. Open them with
+`scripts/sh/dashboard.sh <file> [<file> ...]` (see the Dashboard section of the main README).
 
-| File | Columns | In the dashboard |
-| --- | --- | --- |
-| `cells.parquet` | `cell` + annotation columns (`cluster`, `sample`, ...) | colours and groups |
-| `embedding_<name>.parquet` | `cell`, `dim1`, `dim2` (e.g. `umap`, `pca`) | one choice per embedding |
-| `values_<name>.parquet` | `cell`, `feature`, `value`: non-zero entries only | one choice per value table (e.g. `raw_umi`, `normalized`) |
-
-Parquet with zstd compression (about 10x smaller than CSV). Git-ignored, except this README.
+The first time, the dashboard writes `<dataset>/` next to them (again when a file changes): the same
+data laid out for fast look-ups. Safe to delete. Git-ignored, except this README.

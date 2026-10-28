@@ -47,3 +47,7 @@ metadata/auto_*
 
 # Container images: rebuilt from scripts/containers/*.def
 *.sif
+
+# Files that macOS and R create on their own
+.DS_Store
+Rplots.pdf
