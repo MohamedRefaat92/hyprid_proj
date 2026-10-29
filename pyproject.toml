@@ -7,10 +7,7 @@ authors = [
     { name = "mohamedrefaat92", email = "mohamedrefaat.1.1992@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = [
-    "biopython>=1.88",
-    "pandas>=3.0.6",
-]
+dependencies = []
 
 [project.scripts]
 hyprid-proj = "hyprid_proj:main"
@@ -20,17 +17,9 @@ requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dashboard = [
-    "anndata>=0.13.4",
-    "mudata>=0.4.1",
-]
 dev = [
     "ipykernel>=7.3.0",
-    "marimo>=0.25.0",
 ]
-
-[tool.uv]
-default-groups = ["dev", "dashboard"]   # what `uv sync` installs (dashboard: scripts/sh/dashboard.sh)
 
 [tool.uv.build-backend]
 module-root = "src/python"   # analysis code lives in src/<language>/

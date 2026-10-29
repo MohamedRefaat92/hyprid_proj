@@ -1,6 +1,6 @@
 # The pipeline: run with scripts/sh/run-pipeline.sh (or targets::tar_make() in R).
 # The store lives in output/_targets (set in _targets.yaml).
-# The example needs inputs in data/: create mock ones with scripts/sh/mock-data.sh.
+# The example needs inputs in data/ and a sample sheet: create mock ones with scripts/sh/mock-data.sh.
 library(targets)
 library(tarchetypes)
 
@@ -19,15 +19,6 @@ list(
   tar_target(logcpm, log_cpm(counts)),
   tar_target(gene_summary, summarise_genes(logcpm, samples)),
   tar_target(gene_plot, plot_genes(gene_summary)),
-
-  # Example multiome data for the dashboard (scripts/sh/dashboard.sh): simulated in Python, replace with your own
-  tar_target(example_multiome_code, "src/python/hyprid_proj/example_multiome.py", format = "file"),
-  tar_target(dashboard_example, {
-    out <- "output/objects/example_multiome.h5mu"
-    status <- system2("uv", c("run", "python", example_multiome_code, out))
-    if (status != 0) stop("the Python simulation failed (output above)")
-    out
-  }, format = "file"),
 
   # Not used by any report: it stays out of the report's pipeline graph
   tar_target(orphan_example, "not used by any report"),

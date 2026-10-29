@@ -522,7 +522,7 @@ else
 fi
 
 # Generated files and machine-specific links never belong in git
-tracked=$( { git ls-files -- output data metadata/auto_* 2>/dev/null || true; } | grep -vxE '(data|output)/README\.md|(output/reports/(latest|archive)|output/dashboard|output/objects)/README\.md' || true)
+tracked=$( { git ls-files -- output data metadata/auto_* 2>/dev/null || true; } | grep -vxE '(data|output)/README\.md|(output/reports/(latest|archive)|output/objects)/README\.md' || true)
 if [[ -z $tracked ]]; then
   pass "nothing under output/, data/ or metadata/auto_* is tracked by git"
 else

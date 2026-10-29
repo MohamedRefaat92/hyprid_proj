@@ -26,6 +26,4 @@ dependencies:
   # Reports (rendered by targets via tar_quarto)
   - quarto>=1.9
   # CLI tools
-  - samtools
-  - bedtools
   - shellcheck
