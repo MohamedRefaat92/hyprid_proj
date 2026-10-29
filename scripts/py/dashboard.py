@@ -4,14 +4,16 @@ Input: one .h5ad (AnnData), one .h5mu (MuData, e.g. multiome), or several .h5ad 
 of the same cells (e.g. my_data_rna.h5ad my_data_atac.h5ad: modalities "rna" and "atac", dataset "my_data";
 the first file with embeddings gives the annotations and embeddings, and its tab comes first).
 
-Started by scripts/sh/dashboard.sh. Writes a folder next to the (first) file, redone only when an input
-is newer or the set of files changed, and prints its path:
+Started by scripts/sh/dashboard.sh (from the project root). Writes output/dashboard/<dataset>/, redone only
+when an input (or this script) is newer or the files are not the same, and prints its path:
 
   cells.tsv                  cell + the categorical obs columns: what cells can be grouped and split by
   embeddings.tsv             cell + the first two dimensions of every embedding: <key>_1, <key>_2
   modalities.txt             the modalities, in order (one tab each)
+  inputs.txt                 the files it was prepared from
   <modality>/features.txt    feature names (genes, peaks, ...), one per line
   <modality>/cells.txt       the modality's cells, in matrix order
+  <modality>/unit.txt        what the values are: uns["unit"] if the file has it, else recognised from them
   <modality>/data.f32        X stored feature by feature (CSC): non-zero values      (float32)
   <modality>/indices.i32                                       their cell positions  (int32, 0-based)
   <modality>/indptr.f64                                        where each feature starts (float64)
@@ -51,6 +53,26 @@ def embeddings(obsm, prefix=""):
     return cols
 
 
+def unit(m):
+    """uns["unit"] if set, else recognised from the first 1,000 cells: counts, log1p(counts) (e.g. Seurat SCT
+    data), log1p(CP10k) (Seurat LogNormalize, scanpy normalize_total + log1p), log1p(CPM); "" if none fits."""
+    if "unit" in m.uns:
+        return str(m.uns["unit"])
+    x = sparse.csr_matrix(m.X[:1000], dtype=np.float64)
+    v = x.data
+    if v.size == 0 or (v < 0).any():
+        return ""
+    if np.allclose(v, np.round(v)):
+        return "counts"
+    if np.allclose(np.expm1(v), np.round(np.expm1(v)), rtol=1e-4, atol=1e-3):
+        return "log1p(counts)"
+    totals = np.asarray(x.expm1().sum(axis=1)).ravel()
+    for total, name in ((1e4, "CP10k"), (1e6, "CPM")):
+        if np.allclose(totals[totals > 0], total, rtol=0.01):
+            return f"log1p({name})"
+    return ""
+
+
 def write_matrix(m, out):
     out.mkdir(parents=True, exist_ok=True)
     x = sparse.csc_matrix(m.X, dtype=np.float32)
@@ -60,6 +82,7 @@ def write_matrix(m, out):
     x.indptr.astype(np.float64).tofile(out / "indptr.f64")
     (out / "features.txt").write_text("\n".join(map(str, m.var_names)) + "\n")
     (out / "cells.txt").write_text("\n".join(map(str, m.obs_names)) + "\n")
+    (out / "unit.txt").write_text(unit(m) + "\n")
 
 
 def names(paths):
@@ -101,13 +124,16 @@ def main():
     if len(paths) > 1 and any(p.suffix != ".h5ad" for p in paths):
         sys.exit("several files: give .h5ad files, one per modality")
     dataset, modality_names = names(paths)
-    out = paths[0].parent / dataset
+    out = Path("output/dashboard") / dataset
     done = out / "embeddings.tsv"  # written last
-    fresh = (done.exists() and all(done.stat().st_mtime > p.stat().st_mtime for p in paths)
-             and (not modality_names or sorted((out / "modalities.txt").read_text().split()) == sorted(modality_names)))
+    inputs = "\n".join(sorted(str(p.resolve()) for p in paths)) + "\n"
+    fresh = (done.exists() and all(done.stat().st_mtime > p.stat().st_mtime for p in [*paths, Path(__file__)])
+             and (out / "inputs.txt").exists() and (out / "inputs.txt").read_text() == inputs)
     if not fresh:
         print(f"preparing {' '.join(map(str, paths))} -> {out}/ (once; again when a file changes)", file=sys.stderr)
+        (out / "inputs.txt").unlink(missing_ok=True)
         prepare(paths, out, modality_names)
+        (out / "inputs.txt").write_text(inputs)
     print(out.resolve())
 
 

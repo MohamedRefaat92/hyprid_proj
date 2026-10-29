@@ -35,7 +35,8 @@ modalities <- setNames(lapply(modalities, function(m) {
   list(path = path,
        features = readLines(file.path(path, "features.txt")),
        indptr = readBin(file.path(path, "indptr.f64"), "double", file.size(file.path(path, "indptr.f64")) / 8),
-       to_cells = match(readLines(file.path(path, "cells.txt")), cells$cell))
+       to_cells = match(readLines(file.path(path, "cells.txt")), cells$cell),
+       unit = readLines(file.path(path, "unit.txt")))
 }), modalities)
 
 feature_values <- function(mod, feature) {
@@ -54,13 +55,15 @@ feature_values <- function(mod, feature) {
 
 # Plots
 embedding_data <- function(embedding, group, split) {
-  data.frame(x = coords[[paste0(embedding, "_1")]], y = coords[[paste0(embedding, "_2")]],
-             group = cells[[group]], split = if (split == "none") "" else cells[[split]])
+  d <- data.frame(group = cells[[group]], split = if (split == "none") "" else cells[[split]])
+  if (length(embedding)) d[c("x", "y")] <- coords[paste0(embedding, c("_1", "_2"))]
+  d
 }
 panels <- function(split) if (split == "none") 1 else nlevels(cells[[split]])
 facet <- function(split) if (split != "none") facet_wrap(~split, ncol = min(panels(split), 4))
 theme_dash <- theme_minimal(base_size = 13) + theme(panel.grid = element_blank())
-theme_embedding <- theme_dash + theme(aspect.ratio = 1)   # square panels, however many
+theme_embedding <- theme_dash + theme(aspect.ratio = 1, axis.text = element_blank())   # square panels, however many
+with_unit <- function(feature, unit, sep = " ") if (nzchar(unit)) paste0(feature, sep, "(", unit, ")") else feature
 
 short_names <- function(group) max(nchar(levels(cells[[group]]))) <= 6
 plot_groups <- function(d, embedding, split, group) {
@@ -75,13 +78,13 @@ plot_groups <- function(d, embedding, split, group) {
   }
   p
 }
-plot_feature <- function(d, embedding, split, feature) {
+plot_feature <- function(d, embedding, split, feature, unit) {
   d <- d[order(d$value, na.last = FALSE), ]   # expressing cells on top
   ggplot(d, aes(x, y, colour = value)) + geom_point(size = 0.3, shape = 16) +
-    scale_colour_viridis_c(name = feature, na.value = "grey85") +
+    scale_colour_viridis_c(name = with_unit(feature, unit, "\n"), na.value = "grey85") +
     facet(split) + labs(x = paste(embedding, 1), y = paste(embedding, 2)) + theme_embedding
 }
-plot_violin <- function(d, group, split, feature) {
+plot_violin <- function(d, group, split, feature, unit) {
   d <- d[!is.na(d$value), ]
   d$fill <- if (split == "none") d$group else d$split
   pct <- aggregate(list(pct = d$value > 0), d[c("group", "fill")], mean)   # % expressing, above each violin
@@ -92,7 +95,7 @@ plot_violin <- function(d, group, split, feature) {
                size = 0.4, alpha = 0.15, shape = 16, show.legend = FALSE) +   # every cell, see-through
     (if (labelled) geom_text(data = pct, aes(y = max(d$value) * 1.08, label = sprintf("%.0f%%", 100 * pct)),
                              position = position_dodge(0.9), size = 3)) +
-    labs(x = group, y = feature, fill = if (split != "none") split,
+    labs(x = group, y = with_unit(feature, unit), fill = if (split != "none") split,
          caption = if (labelled) "% = cells with a value above 0") +
     guides(fill = if (split == "none") "none") + theme_dash +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -129,7 +132,7 @@ ui <- fluidPage(
   titlePanel(paste("Dashboard:", basename(dir)), windowTitle = "Dashboard"),
   sidebarLayout(
     sidebarPanel(width = 2,
-      selectInput("embedding", "Embedding", embeddings),
+      if (length(embeddings)) selectInput("embedding", "Embedding", embeddings),
       selectInput("group", "Group by", annotations, selected = default_group),
       selectInput("split", "Split by", c("none", annotations)),
       helpText(sprintf("%d cells", nrow(cells)), br(),
@@ -155,8 +158,8 @@ modality_server <- function(name, settings) {
     })
     plots <- list(
       groups = reactive(with(settings(), plot_groups(cells, embedding, split, group))),
-      feature_plot = reactive(with(settings(), plot_feature(data(), embedding, split, input$feature))),
-      violin = reactive(with(settings(), plot_violin(data(), group, split, input$feature))))
+      feature_plot = reactive(with(settings(), plot_feature(data(), embedding, split, input$feature, mod$unit))),
+      violin = reactive(with(settings(), plot_violin(data(), group, split, input$feature, mod$unit))))
     # Embedding plots: square panels, so the height follows the plot's width and the number of panel rows
     embedding_height <- function(id) function() {
       n <- panels(settings()$split)
@@ -168,6 +171,10 @@ modality_server <- function(name, settings) {
     file_name <- function(id) function() paste(name, input$feature, settings()$embedding, settings()$split, id, sep = "_")
 
     output$embeddings <- renderUI({
+      if (!length(embeddings)) {   # e.g. a modality saved without them: violins and table only
+        return(helpText("No embeddings in this file. To plot cells on one, open this file together with the one",
+                        "that has them, e.g. scripts/sh/dashboard.sh my_data_rna.h5ad my_data_atac.h5ad"))
+      }
       width <- if (settings()$split == "none") 6 else 12
       fluidRow(column(width, plot_box(ns, "groups")), column(width, plot_box(ns, "feature_plot")))
     })
