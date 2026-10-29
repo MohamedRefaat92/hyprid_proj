@@ -1,8 +1,6 @@
 # output/dashboard/
 
-Single-cell results to look up in the dashboard: `.h5ad` (AnnData) files, one per modality for
-multimodal data (`<dataset>_<modality>.h5ad`), or `.h5mu` (MuData) files. Open them with
-`scripts/sh/dashboard.sh <file> [<file> ...]` (see the Dashboard section of the main README).
-
-The first time, the dashboard writes `<dataset>/` next to them (again when a file changes): the same
-data laid out for fast look-ups. Safe to delete. Git-ignored, except this README.
+The dashboard's prepared data: one `<dataset>/` folder per dataset opened with `scripts/sh/dashboard.sh`
+(see the Dashboard section of the main README), written the first time and again when a file changes.
+It is the same data as the `.h5ad` / `.h5mu` files in `output/objects/`, laid out for fast look-ups.
+Safe to delete. Git-ignored, except this README.

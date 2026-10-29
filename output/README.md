@@ -9,7 +9,8 @@ output/
 ├── reports/
 │   ├── latest/                                latest render of each report (managed by targets)
 │   └── archive/<date>/<report>_<date_time>/   frozen snapshots: zip and share a whole folder
-└── dashboard/                                 .h5ad / .h5mu files for the dashboard (scripts/sh/dashboard.sh)
+├── objects/                                   analysis objects to keep: .h5ad, .h5mu, .rds, ...
+└── dashboard/                                 the dashboard's prepared data (scripts/sh/dashboard.sh)
 ```
 
 Never edit files here by hand: change the code or the inputs, then `scripts/sh/run-pipeline.sh`.

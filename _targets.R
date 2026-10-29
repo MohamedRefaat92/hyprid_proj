@@ -23,7 +23,7 @@ list(
   # Example multiome data for the dashboard (scripts/sh/dashboard.sh): simulated in Python, replace with your own
   tar_target(example_multiome_code, "src/python/hyprid_proj/example_multiome.py", format = "file"),
   tar_target(dashboard_example, {
-    out <- "output/dashboard/example_multiome.h5mu"
+    out <- "output/objects/example_multiome.h5mu"
     status <- system2("uv", c("run", "python", example_multiome_code, out))
     if (status != 0) stop("the Python simulation failed (output above)")
     out

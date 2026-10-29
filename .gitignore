@@ -33,6 +33,7 @@ output/**
 !output/reports/latest/README.md
 !output/reports/archive/README.md
 !output/dashboard/README.md
+!output/objects/README.md
 # the targets store, whole (targets puts its own .gitignore inside it, which would expose meta/)
 output/_targets/
 /.quarto/

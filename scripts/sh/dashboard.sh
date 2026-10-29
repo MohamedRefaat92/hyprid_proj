@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Open single-cell data in the dashboard (Ctrl+C to stop): one .h5ad, one .h5mu, or several .h5ad files,
 # one per modality of the same cells (my_data_rna.h5ad my_data_atac.h5ad: tabs "rna" and "atac").
-# First prepares the data for fast look-ups (scripts/py/dashboard.py, only when a file changed), then
+# First prepares the data for fast look-ups into output/dashboard/<dataset>/ (scripts/py/dashboard.py, only
+# when a file changed), then
 # starts the Shiny app (scripts/R/dashboard-app.R).
 #
 #   scripts/sh/dashboard.sh [file ...] [--port 8050] [--shared]
-#     file       default: the only .h5ad/.h5mu in output/dashboard/
+#     file       default: the only .h5ad/.h5mu in output/objects/
 #     --shared   reachable by others on this server's network (default: this machine only)
 #   On a remote server, without --shared: `ssh -L 8050:localhost:8050 <server>` on your laptop,
 #   then open http://localhost:8050.
@@ -22,9 +23,9 @@ while [[ $# -gt 0 ]]; do
 done
 if [[ ${#files[@]} -eq 0 ]]; then
   shopt -s nullglob
-  found=(output/dashboard/*.h5ad output/dashboard/*.h5mu)
+  found=(output/objects/*.h5ad output/objects/*.h5mu)
   if [[ ${#found[@]} -ne 1 ]]; then
-    echo "name the file(s) to open: scripts/sh/dashboard.sh <file> [<file> ...]; in output/dashboard/:" >&2
+    echo "name the file(s) to open: scripts/sh/dashboard.sh <file> [<file> ...]; in output/objects/:" >&2
     printf '  %s\n' "${found[@]:-(none)}" >&2
     exit 1
   fi

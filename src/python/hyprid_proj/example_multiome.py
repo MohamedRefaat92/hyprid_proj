@@ -1,6 +1,6 @@
 """Example multiome data for the dashboard (scripts/sh/dashboard.sh): simulated, replace with your own.
 
-    uv run python src/python/hyprid_proj/example_multiome.py output/dashboard/example_multiome.h5mu
+    uv run python src/python/hyprid_proj/example_multiome.py output/objects/example_multiome.h5mu
 """
 
 import sys
