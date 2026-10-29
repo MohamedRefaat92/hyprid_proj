@@ -8,6 +8,7 @@ dependencies:
   # build toolchain for renv source installs
   - compilers
   - make
+  - cmake           # packages that build a bundled library (e.g. nloptr)
   - pkg-config
   # C libraries commonly needed by R packages
   - libcurl
@@ -15,6 +16,7 @@ dependencies:
   - libxml2
   - zlib
   - icu
+  - libuv           # fs (used by most of the tidyverse, devtools, renv tooling)
   - zeromq          # IRkernel -> pbdZMQ
   - gettext
   - pandoc          # rmarkdown

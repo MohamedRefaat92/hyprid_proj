@@ -21,6 +21,9 @@ local({
     file.path(prefix, "bin")
   }
   Sys.setenv(PATH = paste(c(bins, Sys.getenv("PATH")), collapse = .Platform$path.sep))
+  # conda's pkg-config searches $CONDA_PREFIX when it is set: with (base) active in the shell, packages
+  # would compile against base's libraries, or not find ./env's (e.g. fs: "libuv not found")
+  Sys.unsetenv("CONDA_PREFIX")
 
   # conda's quarto only works with the variables its activation script sets (QUARTO_SHARE_PATH, ...).
   # Apply just those, not a full activation, which would also change compiler settings.
