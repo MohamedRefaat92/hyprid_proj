@@ -493,7 +493,7 @@ for f in data/* data/.[!.]*; do
   fi
 done
 if [[ -n $broken ]]; then
-  fail "broken input links in data/: $broken" "the data moved or this is another machine: scripts/sh/link-input.sh <path> <name>"
+  fail "broken input links in data/: $broken" "the data moved or this is another machine: scripts/sh/link-input.sh <path> --name <name>"
 elif [[ -n $copies ]]; then
   warn "real files in data/ (not symlinks): $copies" "keep data outside the project; link it with scripts/sh/link-input.sh"
 else

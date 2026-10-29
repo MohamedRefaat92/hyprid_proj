@@ -78,6 +78,7 @@ Input data never lives in the project: `data/` holds **symlinks** to it (git-ign
 
 ```bash
 scripts/sh/link-input.sh /path/to/run_folder        # a file or a whole folder: available as data/run_folder
+scripts/sh/link-input.sh /path/to/files/*.fastq.gz  # several at once, each under its own name (--name to rename one)
 scripts/sh/catalogue-data.sh                        # regenerate the auto catalogue; lists new / changed / missing files
 cp metadata/auto_catalogue_data.tsv metadata/catalogue_data.tsv   # accept it after review; describe new rows; commit
 ```
@@ -181,7 +182,7 @@ The exit code is 0 only if nothing failed, so it can gate other commands: `scrip
 
 | To add | Do | Then record it |
 | --- | --- | --- |
-| An input | `scripts/sh/link-input.sh <path> [name]`, `scripts/sh/catalogue-data.sh`, then a file target in `_targets.R` | review the auto catalogue, copy it to `metadata/catalogue_data.tsv`, describe the file, commit |
+| An input | `scripts/sh/link-input.sh <path> ...`, `scripts/sh/catalogue-data.sh`, then a file target in `_targets.R` | review the auto catalogue, copy it to `metadata/catalogue_data.tsv`, describe the file, commit |
 | A report | `notebooks/<report>/<report>.qmd` with the provenance and session-info includes, then `tar_quarto(…, extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))` in `_targets.R` | commit the `.qmd` and `_targets.R` |
 | A Python package | `uv add <pkg>` (`uv add --dev <pkg>` for tooling such as ipykernel) | automatic (`uv.lock`) |
 | An R package | `renv::install("<pkg>")`, and use it in code or list it in `_dependencies.R` | `renv::snapshot()` |
