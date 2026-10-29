@@ -13,7 +13,7 @@ dependencies:
   # C libraries commonly needed by R packages
   - libcurl
   - openssl
-  - libxml2
+  - libxml2-devel   # libxml2 + xml2-config / libxml-2.0.pc (igraph, xml2); without it builds use a libxml2 from PATH
   - zlib
   - icu
   - libuv           # fs (used by most of the tidyverse, devtools, renv tooling)

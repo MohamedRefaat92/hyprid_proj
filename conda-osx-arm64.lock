@@ -58,7 +58,7 @@ https://conda.anaconda.org/conda-forge/osx-arm64/libpng-1.6.58-hf5e6511_1.conda#
 https://conda.anaconda.org/conda-forge/osx-arm64/libpsl-0.23.1-hdb0c161_1.conda#5d270f716a2b4bc13df9af8612071b17
 https://conda.anaconda.org/conda-forge/osx-arm64/libpython-3.14.7-h4311e70_106_cp314.conda#4d7a303343eff82e8b92d52c5fd3991a
 https://conda.anaconda.org/conda-forge/osx-arm64/libsqlite-3.53.4-hca69786_1.conda#fde96d40ebe9a9cb34e4122380189ddb
-https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-16-2.15.4-heb56d2d_0.conda#b40633f711a5eb8617917e0e944b9965
+https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-16-2.15.4-heb56d2d_1.conda#ef82ce9c5e6a0bb8bc9cb0e6935f18ca
 https://conda.anaconda.org/conda-forge/osx-arm64/openssl-3.6.4-h55eecbc_0.conda#ae71ab40048c19a389a7dcccb86c2481
 https://conda.anaconda.org/conda-forge/osx-arm64/pcre2-10.47-he63d830_1.conda#5ab90033816cbe4097e8a297e5179f67
 https://conda.anaconda.org/conda-forge/osx-arm64/pixman-0.46.4-h784d473_3.conda#9a99c0b60efe41c194d01c182d000733
@@ -84,7 +84,7 @@ https://conda.anaconda.org/conda-forge/osx-arm64/libnghttp2-1.68.1-h435687b_1.co
 https://conda.anaconda.org/conda-forge/osx-arm64/libsigtool-0.1.3-h98dc951_1.conda#c70eb797aa92a294b09ef8f41f6bd578
 https://conda.anaconda.org/conda-forge/osx-arm64/libssh2-1.11.1-hbf2880b_1.conda#d957a8eda98c49b073e8dcfd677c127a
 https://conda.anaconda.org/conda-forge/osx-arm64/libtiff-4.7.2-hf67920b_1.conda#b6b191267455bf202af79f973690ed5d
-https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-2.15.4-h550178d_0.conda#4b97a34d06740b578c32deba195daf5a
+https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-2.15.4-h550178d_1.conda#5881b9ab679553078d590db82d7e57b3
 https://conda.anaconda.org/conda-forge/osx-arm64/python-3.14.7-h0ae1c2c_106_cp314.conda#5fd37c78250b4f57c2bcf9ad2e54beb1
 https://conda.anaconda.org/conda-forge/osx-arm64/shellcheck-0.11.0-hecfb573_1.conda#16c849ba724a6d59132a3b7547e2bd36
 https://conda.anaconda.org/conda-forge/osx-arm64/tktable-2.10-h74c22ad_11.conda#61b8882525fb50dabaf9f0dfa06c9759
@@ -114,6 +114,7 @@ https://conda.anaconda.org/conda-forge/osx-arm64/libgettextpo-devel-0.25.1-hae62
 https://conda.anaconda.org/conda-forge/osx-arm64/libgfortran5-16.2.0-hdb7a957_7.conda#c9d80dd8775b8fe76e825d63d8ccaf1b
 https://conda.anaconda.org/conda-forge/osx-arm64/libllvm21-21.1.8-h759d1ac_1.conda#ecef0bb48f6401ce6e99bedaa24c78be
 https://conda.anaconda.org/conda-forge/osx-arm64/libllvm23-23.1.2-h759d1ac_0.conda#daca24218ecf5b842261326ad6ca4e4c
+https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-devel-2.15.4-h550178d_1.conda#a1f64e915bf55dfe36e96e0a3a1c122f
 https://conda.anaconda.org/conda-forge/osx-arm64/markupsafe-3.0.3-py314h6e9b3f0_1.conda#d33c0a15882b70255abdd54711b06a45
 https://conda.anaconda.org/conda-forge/noarch/nest-asyncio2-1.7.3-pyh5ded981_0.conda#409939a1f19ecec35d0b89e7889ecd92
 https://conda.anaconda.org/conda-forge/noarch/packaging-26.3-pyhc364b38_0.conda#936687ed80f295a1f5dbcf8bd34c252c
