@@ -9,7 +9,7 @@ subtitle: "Mock expression data: treated vs. control"
 #| label: setup
 #| include: false
 library(targets)
-source("scripts/R/provenance.R")
+source("tools/R/provenance.R")
 out <- report_dir()   # this report's folder in output/reports/latest/: save its figures and tables there
 ```
 

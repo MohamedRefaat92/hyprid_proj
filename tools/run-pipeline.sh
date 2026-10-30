@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Run the targets pipeline, then snapshot every report it (re-)rendered into output/reports/archive/.
 #
-#   scripts/sh/run-pipeline.sh
+#   tools/run-pipeline.sh
 set -euo pipefail
-cd "$(dirname "$0")/../.."   # run from the project root, wherever this was called from
+cd "$(dirname "$0")/.."   # run from the project root, wherever this was called from
 
 marker=$(mktemp)          # reports rendered after this moment were produced by this run
 trap 'rm -f "$marker"' EXIT
@@ -16,5 +16,5 @@ if [[ -z $rendered ]]; then
   exit 0
 fi
 while IFS= read -r html; do
-  scripts/sh/snapshot-report.sh "$(dirname "$html")"
+  tools/snapshot-report.sh "$(dirname "$html")"
 done <<<"$rendered"

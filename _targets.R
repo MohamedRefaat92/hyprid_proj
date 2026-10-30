@@ -1,15 +1,15 @@
-# The pipeline: run with scripts/sh/run-pipeline.sh (or targets::tar_make() in R).
+# The pipeline: run with tools/run-pipeline.sh (or targets::tar_make() in R).
 # The store lives in output/_targets (set in _targets.yaml).
-# The example needs inputs in data/ and a sample sheet: create mock ones with scripts/sh/mock-data.sh.
+# The example needs inputs in data/ and a sample sheet: create mock ones with tools/mock-data.sh.
 library(targets)
 library(tarchetypes)
 
-tar_source(c("src/R", "scripts/R/provenance.R"))   # analysis functions + bookkeeping
-# (not all of scripts/R: some files run when sourced, e.g. register-r-kernel.R)
+tar_source(c("src/R", "tools/R/provenance.R"))   # analysis functions + bookkeeping
+# (not all of tools/R: some files run when sourced, e.g. register-r-kernel.R)
 
 list(
   # Inputs as file targets: targets re-runs everything downstream when a file's content changes.
-  # Which data the project uses, and what it is: metadata/catalogue_data.tsv (scripts/sh/catalogue-data.sh).
+  # Which data the project uses, and what it is: metadata/catalogue_data.tsv (tools/catalogue-data.sh).
   tar_target(counts_file, "data/counts.tsv", format = "file"),
   tar_target(samples_file, "metadata/samples.csv", format = "file"),   # the sample sheet (metadata you write)
 
@@ -26,5 +26,5 @@ list(
   # Reports: one folder per report under notebooks/, rendered to output/reports/latest/
   # extra_files: also re-render when the report style, the provenance helper, the reviewed data catalogue or renv.lock changes
   tar_quarto(example_report, "notebooks/example-report/example-report.qmd",
-             extra_files = c("_quarto.yml", "scripts/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))
+             extra_files = c("_quarto.yml", "tools/R/provenance.R", "metadata/catalogue_data.tsv", "renv.lock"))
 )

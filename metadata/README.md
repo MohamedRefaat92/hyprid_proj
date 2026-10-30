@@ -9,11 +9,11 @@ Everything here is committed, except files starting with `auto_`, which scripts 
 
 | File | Made by | In git |
 | --- | --- | --- |
-| `auto_catalogue_data.tsv` | `scripts/sh/catalogue-data.sh`, from `data/` | no |
+| `auto_catalogue_data.tsv` | `tools/catalogue-data.sh`, from `data/` | no |
 | `catalogue_data.tsv` | you, by reviewing the auto file and copying it | yes |
 
 ```bash
-scripts/sh/catalogue-data.sh                                          # regenerate; reports new / changed / missing files
+tools/catalogue-data.sh                                          # regenerate; reports new / changed / missing files
 cp metadata/auto_catalogue_data.tsv metadata/catalogue_data.tsv    # accept it after review
 ```
 

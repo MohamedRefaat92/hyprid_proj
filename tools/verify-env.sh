@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # verify-env.sh: read-only check that the environment matches its declared setup
 # (environment.yml, lockfiles, kernels, editor settings, project structure) and that the layers are
-# wired together correctly. It changes nothing; scripts/sh/bootstrap.sh is what repairs.
+# wired together correctly. It changes nothing; tools/bootstrap.sh is what repairs.
 #
-#   scripts/sh/verify-env.sh          fast checks
-#   scripts/sh/verify-env.sh --deep   also start each kernel and run code
+#   tools/verify-env.sh          fast checks
+#   tools/verify-env.sh --deep   also start each kernel and run code
 set -uo pipefail                       # no -e: one failed check must not end the report
 
 deep=false
@@ -16,7 +16,7 @@ for arg in "$@"; do
   esac
 done
 
-cd "$(dirname "$0")/../.." || exit 1      # run from the project root, wherever this was called from
+cd "$(dirname "$0")/.." || exit 1      # run from the project root, wherever this was called from
 root=$PWD
 
 n_pass=0 n_warn=0 n_fail=0
@@ -66,7 +66,7 @@ if [[ -d env/conda-meta ]]; then
   have_env=true
   pass "./env exists"
 else
-  fail "no ./env (conda env)" "run scripts/sh/bootstrap.sh"
+  fail "no ./env (conda env)" "run tools/bootstrap.sh"
 fi
 
 section "1. Runtime (./env)"
@@ -84,7 +84,7 @@ else
     [[ -n $missing ]] && msg+="missing: $(short <<<"$missing")  "
     [[ -n $extra ]]   && msg+="extra: $(short <<<"$extra")"
     fail "./env differs from $lock: $msg" \
-         "if you changed the env on purpose, relock; else rm -rf env && scripts/sh/bootstrap.sh"
+         "if you changed the env on purpose, relock; else rm -rf env && tools/bootstrap.sh"
   fi
 
   names=$(sed -n '/^dependencies:/,$p' environment.yml |
@@ -179,7 +179,7 @@ if $have_r; then
     pass "running R is ./env's R"
   else
     fail "the R that ran is not ./env's R: $r_home" \
-         "env/bin/Rscript should launch ./env's R; rebuild the env (rm -rf env && scripts/sh/bootstrap.sh)"
+         "env/bin/Rscript should launch ./env's R; rebuild the env (rm -rf env && tools/bootstrap.sh)"
   fi
   if [[ $r_lib == "$root/renv/library/"* ]];then
     renv_active=true
@@ -208,7 +208,7 @@ if $have_r; then
   if [[ $r_cc == "$root/env/"* ]];then
     pass "C compiler: ${r_cc#"$root/"}"
   elif [[ -z $r_cc ]];then
-    fail "C compiler not found on R's PATH" "check the PATH block in .Rprofile; rerun scripts/sh/bootstrap.sh"
+    fail "C compiler not found on R's PATH" "check the PATH block in .Rprofile; rerun tools/bootstrap.sh"
   else
     warn "C compiler outside ./env: $r_cc" "packages would build with a compiler conda didn't provide; check PATH order"
   fi
@@ -304,16 +304,16 @@ EOF
           kernels+="$name "
           # 4a/4b: the program exists and belongs to the right layer (uv owns Python, conda owns R)
           if [[ ! -x $prog ]]; then
-            fail "kernel $name: program missing: $prog" "scripts/sh/bootstrap.sh re-registers the kernels"
+            fail "kernel $name: program missing: $prog" "tools/bootstrap.sh re-registers the kernels"
           elif [[ $lang == python && $prog == "$root/.venv/"* ]] || [[ $lang == R && $prog == "$root/env/"* ]]; then
             pass "kernel $name → ${prog#"$root/"}"
           else
             fail "kernel $name ($lang) runs $prog, not this project's $lang layer" \
-                 "Python kernels must use .venv, R kernels ./env: rm -rf env/share/jupyter/kernels/$name, or scripts/sh/bootstrap.sh"
+                 "Python kernels must use .venv, R kernels ./env: rm -rf env/share/jupyter/kernels/$name, or tools/bootstrap.sh"
           fi
           # 4c: R kernels point renv at this project
           if [[ $lang == R && $renv != "$root" ]]; then
-            fail "kernel $name points renv at ${renv:-nothing}, not this project" "folder moved or renamed? scripts/sh/bootstrap.sh"
+            fail "kernel $name points renv at ${renv:-nothing}, not this project" "folder moved or renamed? tools/bootstrap.sh"
           fi
           ;;
         allowed) allowed=$name ;;
@@ -322,17 +322,17 @@ EOF
     done <<<"$j_facts"
 
     if [[ -z $kernels ]]; then
-      fail "no kernels registered in ./env" "scripts/sh/bootstrap.sh"
+      fail "no kernels registered in ./env" "tools/bootstrap.sh"
     fi
 
     # 4d/4e: the allowlist and the registered kernels agree
     if [[ -z $allowed ]]; then
-      warn "no kernel allowlist: JupyterLab offers every kernel, including the env's own python3" "scripts/sh/bootstrap.sh writes it"
+      warn "no kernel allowlist: JupyterLab offers every kernel, including the env's own python3" "tools/bootstrap.sh writes it"
     else
       allow_ok=true
       for k in $allowed; do
         if [[ " $kernels " != *" $k "* ]]; then
-          fail "allowlisted kernel $k does not exist" "scripts/sh/bootstrap.sh"
+          fail "allowlisted kernel $k does not exist" "tools/bootstrap.sh"
           allow_ok=false
         fi
       done
@@ -349,11 +349,11 @@ EOF
 
     # 4f: JupyterLab's R language server is ./env's
     if [[ -z $lsp ]]; then
-      warn "no R language server configured for JupyterLab" "jupyterlab-lsp would use the first Rscript on PATH; scripts/sh/bootstrap.sh"
+      warn "no R language server configured for JupyterLab" "jupyterlab-lsp would use the first Rscript on PATH; tools/bootstrap.sh"
     elif [[ $lsp == "$root/env/"* ]]; then
       pass "JupyterLab R language server: ${lsp#"$root/"}"
     else
-      fail "JupyterLab R language server runs $lsp" "scripts/sh/bootstrap.sh writes the LSP config"
+      fail "JupyterLab R language server runs $lsp" "tools/bootstrap.sh writes the LSP config"
     fi
   fi
 fi
@@ -463,11 +463,11 @@ done
 section "7. Project structure"
 # Folders and files the template's workflow relies on
 missing=""
-for p in data metadata src/R src/python notebooks scripts/sh scripts/R _targets.R _targets.yaml _quarto.yml; do
+for p in data metadata src/R src/python/analysis notebooks tools tools/R _targets.R _targets.yaml _quarto.yml; do
   [[ -e $p ]] || missing+="$p "
 done
 if [[ -z $missing ]]; then
-  pass "folders and pipeline files present (data, metadata, src/R, src/python, notebooks, scripts/sh, scripts/R, _targets.*, _quarto.yml)"
+  pass "folders and pipeline files present (data, metadata, src/R, src/python/analysis, notebooks, tools, tools/R, _targets.*, _quarto.yml)"
 else
   fail "missing: $missing" "restore them from the template (git checkout -- <path>) or recreate them"
 fi
@@ -493,9 +493,9 @@ for f in data/* data/.[!.]*; do
   fi
 done
 if [[ -n $broken ]]; then
-  fail "broken input links in data/: $broken" "the data moved or this is another machine: scripts/sh/link-input.sh <path> --name <name>"
+  fail "broken input links in data/: $broken" "the data moved or this is another machine: tools/link-input.sh <path> --name <name>"
 elif [[ -n $copies ]]; then
-  warn "real files in data/ (not symlinks): $copies" "keep data outside the project; link it with scripts/sh/link-input.sh"
+  warn "real files in data/ (not symlinks): $copies" "keep data outside the project; link it with tools/link-input.sh"
 else
   pass "data/: $n_links input link(s), all resolve"
 fi
@@ -504,7 +504,7 @@ fi
 reviewed=metadata/catalogue_data.tsv
 if [[ ! -f $reviewed ]]; then
   warn "no reviewed data catalogue ($reviewed)" \
-       "scripts/sh/catalogue-data.sh, review metadata/auto_catalogue_data.tsv, copy it to $reviewed, commit"
+       "tools/catalogue-data.sh, review metadata/auto_catalogue_data.tsv, copy it to $reviewed, commit"
 else
   listed=$(tail -n +2 "$reviewed" | cut -f1 | sort)
   on_disk=$(cd data && find -L . -type f ! -name README.md 2>/dev/null | sed 's#^\./##' | sort)
@@ -512,10 +512,10 @@ else
   gone=$(comm -23 <(echo "$listed") <(echo "$on_disk") | grep -v '^$' || true)
   if [[ -n $uncatalogued ]]; then
     warn "$(wc -l <<<"$uncatalogued" | tr -d ' ') file(s) in data/ not in the reviewed catalogue: $(head -3 <<<"$uncatalogued" | paste -sd' ' -)" \
-         "scripts/sh/catalogue-data.sh, review, copy to $reviewed"
+         "tools/catalogue-data.sh, review, copy to $reviewed"
   elif [[ -n $gone ]]; then
     warn "$(wc -l <<<"$gone" | tr -d ' ') catalogued file(s) not in data/: $(head -3 <<<"$gone" | paste -sd' ' -)" \
-         "relink them (scripts/sh/link-input.sh), or remove their rows if the project no longer uses them"
+         "relink them (tools/link-input.sh), or remove their rows if the project no longer uses them"
   else
     pass "reviewed data catalogue lists all $(grep -c . <<<"$listed") file(s) in data/"
   fi
@@ -533,7 +533,7 @@ fi
 # Stray files in the project root (e.g. from a mistyped redirect like `... > bash`)
 expected=" .git .gitignore .python-version .Rprofile .Rhistory .renvignore .venv .vscode .quarto .DS_Store
   .ipynb_checkpoints __marimo__ __pycache__ README.md LICENSE _dependencies.R _targets.R _targets.yaml
-  _quarto.yml environment.yml pyproject.toml uv.lock renv renv.lock env data metadata src notebooks output scripts "
+  _quarto.yml environment.yml pyproject.toml uv.lock renv renv.lock env data metadata src notebooks output scripts tools "
 strays=""
 for f in * .[!.]*; do
   [[ -e $f || -L $f ]] || continue
@@ -590,7 +590,7 @@ EOF
     while IFS='|' read -r name lang status value; do
       [[ -n $name ]] || continue
       if [[ $lang == error ]]; then
-        fail "kernel $name: $value" "scripts/sh/bootstrap.sh; open it in JupyterLab to see the full error"
+        fail "kernel $name: $value" "tools/bootstrap.sh; open it in JupyterLab to see the full error"
       elif [[ $status != ok ]]; then
         fail "kernel $name started, but the test code failed ($status)" "open it in JupyterLab and run the code by hand"
       elif [[ $lang == R && $value == "$root/renv/library/"* ]] || [[ $lang == python && $value == "$root/.venv/"* ]]; then

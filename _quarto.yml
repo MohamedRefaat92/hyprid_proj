@@ -1,6 +1,6 @@
 # Quarto project: reports in notebooks/ are rendered (by targets, via tar_quarto) into output/reports/latest/.
 project:
-  output-dir: output/reports/latest   # snapshots go to output/reports/archive/ (scripts/sh/snapshot-report.sh)
+  output-dir: output/reports/latest   # snapshots go to output/reports/archive/ (tools/snapshot-report.sh)
   execute-dir: project        # code runs from the project root, so tar_read() finds _targets.yaml
 
 # Shown at the top of every report (a report can override these in its own front matter).

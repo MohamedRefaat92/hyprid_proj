@@ -4,7 +4,7 @@
 
     <YYYY-MM-DD>/<report>_<YYYY-MM-DD_HH-MM>/
 
-`scripts/sh/run-pipeline.sh` snapshots every report it re-rendered; `scripts/sh/snapshot-report.sh <report>`
+`tools/run-pipeline.sh` snapshots every report it re-rendered; `tools/snapshot-report.sh <report>`
 takes one by hand. Each snapshot is a copy of the report's folder in `../latest/` (HTML, `<report>_files/`,
 `artifacts/`), and its provenance block records the commit, input data and pipeline it came from.
 

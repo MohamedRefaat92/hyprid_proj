@@ -7,21 +7,21 @@
 # ones marked "missing". Review the generated file, then accept it:
 #   cp metadata/auto_catalogue_data.tsv metadata/catalogue_data.tsv   (describe new rows, commit)
 #
-#   scripts/sh/catalogue-data.sh            full scan; md5 only for new or changed files
-#   scripts/sh/catalogue-data.sh --no-md5   quick scan without checksums
+#   tools/catalogue-data.sh            full scan; md5 only for new or changed files
+#   tools/catalogue-data.sh --no-md5   quick scan without checksums
 set -euo pipefail
-cd "$(dirname "$0")/../.."   # run from the project root, wherever this was called from
+cd "$(dirname "$0")/.."   # run from the project root, wherever this was called from
 
 md5=TRUE
 case "${1:-}" in
   --no-md5) md5=FALSE ;;
   "")       ;;
-  *)        echo "usage: scripts/sh/catalogue-data.sh [--no-md5]" >&2; exit 2 ;;
+  *)        echo "usage: tools/catalogue-data.sh [--no-md5]" >&2; exit 2 ;;
 esac
 
 # shellcheck disable=SC2016  # single-quoted R code; $ is R's list operator
 env/bin/Rscript -e '
-  source("scripts/R/catalogue.R")
+  source("tools/R/catalogue.R")
   r <- update_catalogue(md5 = as.logical(commandArgs(TRUE)[1]))
   t <- r$table
   cat(sprintf("metadata/auto_catalogue_data.tsv: %d file(s), %d present, %d missing\n",

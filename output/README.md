@@ -12,4 +12,4 @@ output/
 └── objects/                                   analysis objects to keep: .h5ad, .h5mu, .rds, ...
 ```
 
-Never edit files here by hand: change the code or the inputs, then `scripts/sh/run-pipeline.sh`.
+Never edit files here by hand: change the code or the inputs, then `tools/run-pipeline.sh`.

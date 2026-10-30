@@ -2,12 +2,12 @@
 # Make input files or folders available to the project as symlinks in data/.
 # Each pipeline run records the inputs (resolved path, format, owner, size, time) in its reports.
 #
-#   scripts/sh/link-input.sh <path> [<path> ...]      each linked under its own name (e.g. /data/run1/*.fastq.gz)
-#   scripts/sh/link-input.sh <path> --name <name>     one path, linked under another name
+#   tools/link-input.sh <path> [<path> ...]      each linked under its own name (e.g. /data/run1/*.fastq.gz)
+#   tools/link-input.sh <path> --name <name>     one path, linked under another name
 # A path that can't be linked (missing, inside the project, name taken) is reported and skipped.
 set -euo pipefail
-root=$(cd "$(dirname "$0")/../.." && pwd)
-usage="usage: scripts/sh/link-input.sh <path> [<path> ...]   or   scripts/sh/link-input.sh <path> --name <name>"
+root=$(cd "$(dirname "$0")/.." && pwd)
+usage="usage: tools/link-input.sh <path> [<path> ...]   or   tools/link-input.sh <path> --name <name>"
 
 paths=() name=""
 while [[ $# -gt 0 ]]; do
@@ -43,6 +43,6 @@ done
 
 echo "$linked linked, $skipped skipped"
 if [[ $linked -gt 0 ]]; then
-  echo "next: scripts/sh/catalogue-data.sh, review metadata/auto_catalogue_data.tsv, copy it to metadata/catalogue_data.tsv"
+  echo "next: tools/catalogue-data.sh, review metadata/auto_catalogue_data.tsv, copy it to metadata/catalogue_data.tsv"
 fi
 [[ $skipped -eq 0 ]]   # exit status 1 if anything was skipped
